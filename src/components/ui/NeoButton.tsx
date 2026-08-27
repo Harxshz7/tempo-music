@@ -8,9 +8,10 @@ import { cn } from './NeoText';
 interface NeoButtonProps extends PressableProps {
   label: string;
   variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
+  fullWidth?: boolean;
 }
 
-export function NeoButton({ label, variant = 'primary', className, ...props }: NeoButtonProps) {
+export function NeoButton({ label, variant = 'primary', fullWidth, className, ...props }: NeoButtonProps) {
   const isPressed = useSharedValue(false);
 
   const animatedStyle = useAnimatedStyle(() => {
@@ -52,7 +53,7 @@ export function NeoButton({ label, variant = 'primary', className, ...props }: N
   if (variant === 'ghost') return buttonContent;
 
   return (
-    <View className="self-start">
+    <View className={fullWidth ? 'w-full' : 'self-start'}>
       <HardShadow>{buttonContent}</HardShadow>
     </View>
   );
