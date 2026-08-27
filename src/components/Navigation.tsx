@@ -12,6 +12,8 @@ import SearchScreen from '../screens/SearchScreen';
 import PlaylistsScreen from '../screens/PlaylistsScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import PlayerScreen from '../screens/PlayerScreen';
+import AlbumDetailScreen from '../screens/AlbumDetailScreen';
+import ArtistDetailScreen from '../screens/ArtistDetailScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -20,8 +22,7 @@ function MainTabs() {
   return (
     <Tab.Navigator
       screenOptions={{
-        headerStyle: { backgroundColor: '#121212' },
-        headerTintColor: '#fff',
+        headerShown: false,
         tabBarStyle: {
           backgroundColor: '#121212',
           borderTopColor: '#1e1e1e',
@@ -78,6 +79,8 @@ export default function Navigation() {
           {isAuthenticated ? (
             <>
               <Stack.Screen name="Main" component={MainTabs} />
+              <Stack.Screen name="AlbumDetail" component={AlbumDetailScreen} />
+              <Stack.Screen name="ArtistDetail" component={ArtistDetailScreen} />
               <Stack.Screen name="Player" component={PlayerScreen} options={{ presentation: 'modal' }} />
             </>
           ) : (
