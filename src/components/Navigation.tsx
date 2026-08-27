@@ -53,6 +53,8 @@ function MainTabs() {
   );
 }
 
+import { NeoPlayerBar } from './NeoPlayerBar';
+
 export default function Navigation() {
   const { isAuthenticated, isLoading, restoreSession } = useAuthStore();
 
@@ -70,13 +72,25 @@ export default function Navigation() {
 
   return (
     <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
-        {isAuthenticated ? (
-          <Stack.Screen name="Main" component={MainTabs} />
-        ) : (
-          <Stack.Screen name="Login" component={LoginScreen} />
+      <View className="flex-1 relative">
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
+          {isAuthenticated ? (
+            <Stack.Screen name="Main" component={MainTabs} />
+          ) : (
+            <Stack.Screen name="Login" component={LoginScreen} />
+          )}
+        </Stack.Navigator>
+        
+        {/* Render player bar absolutely above bottom tabs. 
+            Standard tab bar is ~50-80px depending on platform/safe area. 
+            We use bottom-14 (56px) as a generic offset for the demo, 
+            or better yet, render it at the bottom of the screen if tabs are hidden. */}
+        {isAuthenticated && (
+          <View className="absolute bottom-[50px] w-full z-50">
+            <NeoPlayerBar />
+          </View>
         )}
-      </Stack.Navigator>
+      </View>
     </NavigationContainer>
   );
 }
