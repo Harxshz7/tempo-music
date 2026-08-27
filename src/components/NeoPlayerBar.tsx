@@ -5,6 +5,7 @@ import { SkipBack, SkipForward, Play, Pause } from 'lucide-react-native';
 import { usePlayerStore } from '../store/playerStore';
 import { useAudioPlayer } from '../hooks/useAudioPlayer';
 import { NeoText } from './ui/NeoText';
+import { useNavigation } from '@react-navigation/native';
 
 // Animated Pressable for mechanical button feel
 const MechButton = ({ children, onPress, className, iconColor = "#000" }: any) => {
@@ -48,6 +49,7 @@ const MechButton = ({ children, onPress, className, iconColor = "#000" }: any) =
 };
 
 export function NeoPlayerBar() {
+  const navigation = useNavigation<any>();
   const { currentTrack, isPlaying, positionMillis, durationMillis, togglePlay, playNext, playPrevious } = usePlayerStore();
   const { play, pause, seek } = useAudioPlayer();
 
@@ -83,7 +85,7 @@ export function NeoPlayerBar() {
       {/* Main Row */}
       <View className="flex-row items-center px-[12px] py-[10px] gap-[10px]">
         {/* Album Art */}
-        <Pressable onPress={() => console.log('Navigate to full player')} className="relative">
+        <Pressable onPress={() => navigation.navigate('Player')} className="relative">
            {/* Static Shadow */}
            <View className="absolute top-[3px] left-[3px] w-[52px] h-[52px] bg-black -rotate-2" />
            <Image 
@@ -93,7 +95,7 @@ export function NeoPlayerBar() {
         </Pressable>
 
         {/* Meta Column */}
-        <Pressable onPress={() => console.log('Navigate to full player')} className="flex-1 justify-center ml-2">
+        <Pressable onPress={() => navigation.navigate('Player')} className="flex-1 justify-center ml-2">
           <NeoText variant="body" numberOfLines={1} ellipsizeMode="tail" className="font-space-grotesk-black uppercase text-[15px] leading-tight">
             {currentTrack.title}
           </NeoText>

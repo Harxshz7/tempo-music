@@ -11,6 +11,7 @@ import LibraryScreen from '../screens/LibraryScreen';
 import SearchScreen from '../screens/SearchScreen';
 import PlaylistsScreen from '../screens/PlaylistsScreen';
 import SettingsScreen from '../screens/SettingsScreen';
+import PlayerScreen from '../screens/PlayerScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -75,7 +76,10 @@ export default function Navigation() {
       <View className="flex-1 relative">
         <Stack.Navigator screenOptions={{ headerShown: false }}>
           {isAuthenticated ? (
-            <Stack.Screen name="Main" component={MainTabs} />
+            <>
+              <Stack.Screen name="Main" component={MainTabs} />
+              <Stack.Screen name="Player" component={PlayerScreen} options={{ presentation: 'modal' }} />
+            </>
           ) : (
             <Stack.Screen name="Login" component={LoginScreen} />
           )}
