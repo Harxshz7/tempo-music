@@ -17,6 +17,7 @@ import { useNavigation } from '@react-navigation/native';
 import subsonic from '../api/subsonic';
 import type { Artist, Album, Playlist, ArtistIndex } from '../types';
 import { NeoText, NeoCard, NeoButton } from '../components/ui';
+import AlbumGridItem from '../components/AlbumGridItem';
 
 type Tab = 'Albums' | 'Artists' | 'Playlists';
 
@@ -137,32 +138,9 @@ export default function LibraryScreen() {
   };
 
   // Renderers
-  const renderAlbum = ({ item, index }: { item: Album, index: number }) => {
-    const rotation = index % 2 === 0 ? '-rotate-1' : 'rotate-1';
-    return (
-      <View style={{ width: `${100 / numColumns}%` }} className="p-2">
-        <Pressable onPress={() => navigation.navigate('AlbumDetail', { albumId: item.id })}>
-          <View className={`bg-neo-bg border-4 border-black p-2 ${rotation}`}>
-            <View className="aspect-square bg-neo-muted border-4 border-black mb-2 relative overflow-hidden">
-               {item.coverArt ? (
-                 <Image source={{ uri: subsonic.getCoverArtUrl(item.coverArt) }} className="w-full h-full" />
-               ) : (
-                 <View className="w-full h-full items-center justify-center bg-gray-200">
-                    <NeoText variant="caption" className="opacity-50 font-bold">NO ART</NeoText>
-                 </View>
-               )}
-            </View>
-            <NeoText variant="body" numberOfLines={1} className="font-black uppercase text-sm leading-tight tracking-tight">
-              {item.name}
-            </NeoText>
-            <NeoText variant="caption" numberOfLines={1} className="font-bold uppercase text-xs opacity-70 mt-0.5">
-              {item.artist ?? 'Unknown'}
-            </NeoText>
-          </View>
-        </Pressable>
-      </View>
-    );
-  };
+  const renderAlbum = ({ item, index }: { item: Album, index: number }) => (
+    <AlbumGridItem album={item} index={index} numColumns={numColumns} showArtistName={true} />
+  );
 
   const renderArtist = ({ item }: { item: Artist }) => (
     <Pressable onPress={() => navigation.navigate('ArtistDetail', { artistId: item.id })} className="px-4 mb-3">
