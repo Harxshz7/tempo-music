@@ -13,6 +13,7 @@ import { ChevronLeft, Play, Shuffle, MoreHorizontal, Music2 } from 'lucide-react
 import subsonic from '../api/subsonic';
 import { NeoText, NeoButton, NeoCard } from '../components/ui';
 import { usePlayerStore, Track } from '../store/playerStore';
+import { TrackRow } from '../components';
 import type { Album, Song } from '../types';
 
 const SkeletonPulse = () => {
@@ -195,31 +196,16 @@ export default function AlbumDetailScreen() {
 
   const renderItem = ({ item, index }: { item: Song, index: number }) => {
     const isPlaying = currentTrack?.id === item.id;
-    
     return (
-      <Pressable 
-        className={`flex-row items-center px-4 py-3 border-b-2 border-black ${isPlaying ? 'bg-neo-secondary/30' : ''}`}
+      <TrackRow 
+        song={item} 
+        index={index} 
+        isPlaying={isPlaying} 
         onPress={() => handleTrackPress(index)}
-      >
-        <View className="w-8 items-center justify-center mr-2">
-          {isPlaying ? (
-            <ActivityIndicator size="small" color="black" />
-          ) : (
-            <NeoText variant="caption" className="font-black text-sm">{item.track || index + 1}</NeoText>
-          )}
-        </View>
-        <View className="flex-1 mr-4">
-          <NeoText variant="body" numberOfLines={1} className="font-bold text-sm">
-            {item.title}
-          </NeoText>
-        </View>
-        <NeoText variant="caption" className="font-bold text-xs opacity-60 mr-4">
-          {formatDuration(item.duration || 0)}
-        </NeoText>
-        <Pressable onPress={() => handleTrackMenu(mapToTracks([item])[0])} className="p-2">
-          <MoreHorizontal color="black" size={20} />
-        </Pressable>
-      </Pressable>
+        onMenuPress={handleTrackMenu}
+        albumArtUrl={album?.coverArt ? subsonic.getCoverArtUrl(album.coverArt) : undefined}
+        fallbackArtist={album?.artist}
+      />
     );
   };
 
