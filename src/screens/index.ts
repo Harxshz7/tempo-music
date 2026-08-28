@@ -6,3 +6,4 @@ export { default as PlaylistsScreen } from './PlaylistsScreen';
 export { default as SettingsScreen } from './SettingsScreen';
 export { default as AlbumScreen } from './AlbumScreen';
 export { default as PlayerScreen } from './PlayerScreen';
+export { default as PlaylistDetailScreen } from './PlaylistDetailScreen';

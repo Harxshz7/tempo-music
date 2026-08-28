@@ -213,6 +213,22 @@ class SubsonicClient {
     }>('getPlaylist', { id });
     return result;
   }
+
+  /** Update a playlist */
+  async updatePlaylist(playlistId: string, songIndexToRemove?: number, name?: string, comment?: string, publicPlaylist?: boolean): Promise<void> {
+    const params: Record<string, string | number | boolean> = { playlistId };
+    if (songIndexToRemove !== undefined) params.songIndexToRemove = songIndexToRemove;
+    if (name !== undefined) params.name = name;
+    if (comment !== undefined) params.comment = comment;
+    if (publicPlaylist !== undefined) params.public = publicPlaylist;
+    
+    await this.request('updatePlaylist', params);
+  }
+
+  /** Delete a playlist */
+  async deletePlaylist(id: string): Promise<void> {
+    await this.request('deletePlaylist', { id });
+  }
 }
 
 /** Singleton instance */
