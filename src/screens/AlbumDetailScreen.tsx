@@ -70,7 +70,7 @@ export default function AlbumDetailScreen() {
       artist: song.artist || album?.artist || 'Unknown',
       coverArtUrl: song.coverArt ? subsonic.getCoverArtUrl(song.coverArt) : undefined,
       streamUrl: subsonic.getStreamUrl(song.id),
-      duration: song.duration,
+      duration: song.duration || 0,
     }));
   };
 
@@ -214,7 +214,7 @@ export default function AlbumDetailScreen() {
           </NeoText>
         </View>
         <NeoText variant="caption" className="font-bold text-xs opacity-60 mr-4">
-          {formatDuration(item.duration)}
+          {formatDuration(item.duration || 0)}
         </NeoText>
         <Pressable onPress={() => handleTrackMenu(mapToTracks([item])[0])} className="p-2">
           <MoreHorizontal color="black" size={20} />

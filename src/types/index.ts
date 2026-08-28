@@ -27,6 +27,7 @@ export interface Album {
   playCount?: number;
   created?: string;
   starred?: string;
+  year?: number;
 }
 
 /** Subsonic song/track response */

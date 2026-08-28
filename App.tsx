@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import Navigation from './src/components/Navigation';
-import { useFonts, SpaceGrotesk_400Regular, SpaceGrotesk_500Medium, SpaceGrotesk_700Bold, SpaceGrotesk_900Black } from '@expo-google-fonts/space-grotesk';
+import { useFonts, SpaceGrotesk_400Regular, SpaceGrotesk_500Medium, SpaceGrotesk_700Bold } from '@expo-google-fonts/space-grotesk';
 import * as SplashScreen from 'expo-splash-screen';
 import './global.css';
 
@@ -12,7 +12,6 @@ export default function App() {
     SpaceGrotesk_400Regular,
     SpaceGrotesk_500Medium,
     SpaceGrotesk_700Bold,
-    SpaceGrotesk_900Black,
   });
 
   useEffect(() => {

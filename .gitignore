@@ -42,6 +42,8 @@ yarn-error.*
 # IDE
 .vscode/
 .idea/
+.claude/
+.gemini/
 *.swp
 *.swo
 
