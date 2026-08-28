@@ -125,7 +125,7 @@ export default function PlaylistDetailScreen() {
   };
 
   const handleTrackMenu = (track: Track, index: number) => {
-    const options = [
+    const options: import('react-native').AlertButton[] = [
       { text: 'Play Next', onPress: () => console.log('Play Next', track) },
       { text: 'Add to Queue', onPress: () => console.log('Add to Queue', track) },
     ];

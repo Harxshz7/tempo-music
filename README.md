@@ -35,14 +35,30 @@ A free, open-source hybrid music app for iOS, Android, and Web, built with React
 npm install
 ```
 
+### Demo Login
+
+If you don't have your own server yet, you can test the app using the public Navidrome demo:
+- **Server URL:** `https://demo.navidrome.org`
+- **Username:** `demo`
+- **Password:** `demo`
+
+### Start Development Server
+
+We recommend starting the bundler and clearing the cache to avoid issues:
+```bash
+npx expo start -c
+```
+
 ### Run (Web)
 
+Press `w` in the terminal after starting the server, or run:
 ```bash
 npm run web
 ```
 
 ### Run (Native)
 
+Press `i` (iOS) or `a` (Android) in the terminal after starting the server, or run:
 ```bash
 npm run ios
 # or
