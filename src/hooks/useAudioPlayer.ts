@@ -1,6 +1,11 @@
 import { useEffect, useRef } from 'react';
-import { Audio } from 'expo-av';
+import { Audio, InterruptionModeIOS, InterruptionModeAndroid } from 'expo-av';
+import { updateNotificationPlayer, setupNotificationPlayer } from '../services/notificationPlayer';
 import { usePlayerStore } from '../store/playerStore';
+
+// Note: iOS lock-screen controls (MPRemoteCommandCenter/MPNowPlayingInfoCenter) 
+// are not fully exposed by expo-av out of the box. 
+// Full integration requires migrating to expo-audio or using a custom native module.
 
 export function useAudioPlayer() {
   const soundRef = useRef<Audio.Sound | null>(null);
@@ -20,7 +25,19 @@ export function useAudioPlayer() {
       playsInSilentModeIOS: true,
       staysActiveInBackground: true,
       shouldDuckAndroid: true,
+      interruptionModeIOS: InterruptionModeIOS.DoNotMix,
+      interruptionModeAndroid: InterruptionModeAndroid.DoNotMix,
     });
+    
+    // Set up Android Media Style Notification Categories
+    setupNotificationPlayer();
+    
+    // Listen for audio interruptions (e.g., phone calls)
+    // expo-av does not have a global interruption listener in JS in older versions, 
+    // but relies on shouldDuckAndroid and interruptionMode. Wait, expo-av provides 
+    // `setOnAudioSampleReceived` and audio focus features, but pausing on interrupt 
+    // is partly handled natively if DoNotMix is set. 
+    // We will ensure the notification player is synced whenever `isPlaying` changes.
   }, []);
 
   useEffect(() => {
@@ -38,7 +55,8 @@ export function useAudioPlayer() {
         soundRef.current.pauseAsync();
       }
     }
-  }, [isPlaying]);
+    updateNotificationPlayer(currentTrack, isPlaying);
+  }, [isPlaying, currentTrack]);
 
   const loadTrack = async () => {
     if (!currentTrack || !currentTrack.streamUrl) return;
