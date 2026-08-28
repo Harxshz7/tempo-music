@@ -5,13 +5,15 @@ import { HardShadow } from './HardShadow';
 import { NeoText } from './NeoText';
 import { cn } from './NeoText';
 
-interface NeoButtonProps extends PressableProps {
-  label: string;
+export interface NeoButtonProps extends PressableProps {
+  label?: string;
   variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
   fullWidth?: boolean;
+  icon?: React.ReactNode;
+  children?: React.ReactNode;
 }
 
-export function NeoButton({ label, variant = 'primary', fullWidth, className, ...props }: NeoButtonProps) {
+export function NeoButton({ label, variant = 'primary', fullWidth, className, icon, children, ...props }: NeoButtonProps) {
   const isPressed = useSharedValue(false);
 
   const animatedStyle = useAnimatedStyle(() => {
@@ -39,13 +41,15 @@ export function NeoButton({ label, variant = 'primary', fullWidth, className, ..
         onPressIn={() => isPressed.value = true}
         onPressOut={() => isPressed.value = false}
         className={cn(
-          "px-6 py-3 border-4 border-black items-center justify-center active:bg-opacity-80",
+          "px-6 py-3 border-4 border-black items-center justify-center flex-row active:bg-opacity-80 gap-2",
           getBgColor(),
           className
         )}
         {...props}
       >
-        <NeoText variant="h3">{label}</NeoText>
+        {icon}
+        {label && <NeoText variant="h3">{label}</NeoText>}
+        {children}
       </Pressable>
     </Animated.View>
   );
