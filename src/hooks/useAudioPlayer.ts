@@ -1,15 +1,15 @@
 import { useEffect, useRef } from 'react';
-import { Audio, InterruptionModeIOS, InterruptionModeAndroid } from 'expo-av';
+import { AppState, AppStateStatus } from 'react-native';
+import { Audio, InterruptionModeIOS, InterruptionModeAndroid, AVPlaybackStatus } from 'expo-av';
 import { updateNotificationPlayer, setupNotificationPlayer } from '../services/notificationPlayer';
 import { usePlayerStore } from '../store/playerStore';
 
-// Note: iOS lock-screen controls (MPRemoteCommandCenter/MPNowPlayingInfoCenter) 
-// are not fully exposed by expo-av out of the box. 
-// Full integration requires migrating to expo-audio or using a custom native module.
+// Module-level reference to ensure a single audio instance across multiple component mounts (e.g., PlayerScreen and NeoPlayerBar)
+let globalSound: Audio.Sound | null = null;
+let currentLoadedTrackId: string | null = null;
+let isAudioConfigured = false;
 
 export function useAudioPlayer() {
-  const soundRef = useRef<Audio.Sound | null>(null);
-  
   const { 
     currentTrack, 
     isPlaying, 
@@ -20,69 +20,125 @@ export function useAudioPlayer() {
   } = usePlayerStore();
 
   useEffect(() => {
-    // Configure audio session
-    Audio.setAudioModeAsync({
-      playsInSilentModeIOS: true,
-      staysActiveInBackground: true,
-      shouldDuckAndroid: true,
-      interruptionModeIOS: InterruptionModeIOS.DoNotMix,
-      interruptionModeAndroid: InterruptionModeAndroid.DoNotMix,
-    });
-    
-    // Set up Android Media Style Notification Categories
-    setupNotificationPlayer();
-    
-    // Listen for audio interruptions (e.g., phone calls)
-    // expo-av does not have a global interruption listener in JS in older versions, 
-    // but relies on shouldDuckAndroid and interruptionMode. Wait, expo-av provides 
-    // `setOnAudioSampleReceived` and audio focus features, but pausing on interrupt 
-    // is partly handled natively if DoNotMix is set. 
-    // We will ensure the notification player is synced whenever `isPlaying` changes.
+    if (!isAudioConfigured) {
+      isAudioConfigured = true;
+      // Configure audio session
+      Audio.setAudioModeAsync({
+        playsInSilentModeIOS: true,
+        staysActiveInBackground: true,
+        shouldDuckAndroid: true,
+        interruptionModeIOS: InterruptionModeIOS.DoNotMix,
+        interruptionModeAndroid: InterruptionModeAndroid.DoNotMix,
+      }).catch(() => {});
+      
+      // Set up Android Media Style Notification Categories
+      setupNotificationPlayer();
+    }
   }, []);
 
   useEffect(() => {
     loadTrack();
-    return () => {
-      unloadTrack();
-    };
   }, [currentTrack?.id]);
 
   useEffect(() => {
-    if (soundRef.current) {
+    if (globalSound) {
       if (isPlaying) {
-        soundRef.current.playAsync();
+        globalSound.playAsync().catch(() => {});
       } else {
-        soundRef.current.pauseAsync();
+        globalSound.pauseAsync().catch(() => {});
       }
     }
     updateNotificationPlayer(currentTrack, isPlaying);
   }, [isPlaying, currentTrack]);
 
+  // Handle app foregrounding/backgrounding position sync
+  useEffect(() => {
+    const handleAppStateChange = async (nextAppState: AppStateStatus) => {
+      if (nextAppState === 'active' && globalSound) {
+        try {
+          const status = await globalSound.getStatusAsync();
+          if (status.isLoaded) {
+            setPositionMillis(status.positionMillis);
+            if (status.durationMillis) {
+              setDurationMillis(status.durationMillis);
+            }
+            if (status.isPlaying !== isPlaying) {
+              setIsPlaying(status.isPlaying);
+            }
+          }
+        } catch {
+          // Reconcile silently on foreground
+        }
+      }
+    };
+
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
+    return () => {
+      subscription.remove();
+    };
+  }, [isPlaying, setPositionMillis, setDurationMillis, setIsPlaying]);
+
   const loadTrack = async () => {
-    if (!currentTrack || !currentTrack.streamUrl) return;
-    
+    if (!currentTrack || !currentTrack.streamUrl) {
+      await unloadTrack();
+      return;
+    }
+
+    if (currentLoadedTrackId === currentTrack.id && globalSound) {
+      return;
+    }
+
     await unloadTrack();
-    
+    currentLoadedTrackId = currentTrack.id;
+
+    if (currentTrack.duration) {
+      setDurationMillis(currentTrack.duration * 1000);
+    }
+
     try {
-      const { sound } = await Audio.Sound.createAsync(
+      const restoredPosition = usePlayerStore.getState().positionMillis;
+      const initialPosition = restoredPosition > 0 ? restoredPosition : 0;
+
+      const { sound, status } = await Audio.Sound.createAsync(
         { uri: currentTrack.streamUrl },
-        { shouldPlay: isPlaying },
+        { 
+          shouldPlay: isPlaying,
+          positionMillis: initialPosition,
+          progressUpdateIntervalMillis: 500,
+        },
         onPlaybackStatusUpdate
       );
-      soundRef.current = sound;
-    } catch (e) {
-      console.error("Error loading track", e);
+
+      globalSound = sound;
+
+      if (initialPosition > 0 && status.isLoaded && status.positionMillis !== initialPosition) {
+        await sound.setPositionAsync(initialPosition).catch(() => {});
+      }
+    } catch {
+      // Guard against loading a stale/invalid streamUrl on restore (fail silently)
+      currentLoadedTrackId = null;
+      usePlayerStore.setState({
+        currentTrack: null,
+        isPlaying: false,
+        positionMillis: 0,
+        durationMillis: 0,
+      });
     }
   };
 
   const unloadTrack = async () => {
-    if (soundRef.current) {
-      await soundRef.current.unloadAsync();
-      soundRef.current = null;
+    if (globalSound) {
+      try {
+        await globalSound.unloadAsync();
+      } catch {
+        // Ignore error during unload
+      }
+      globalSound = null;
+      currentLoadedTrackId = null;
     }
   };
 
-  const onPlaybackStatusUpdate = (status: any) => {
+  const onPlaybackStatusUpdate = (status: AVPlaybackStatus) => {
     if (status.isLoaded) {
       setPositionMillis(status.positionMillis);
       if (status.durationMillis) {
@@ -91,8 +147,6 @@ export function useAudioPlayer() {
       if (status.didJustFinish) {
         playNext();
       }
-    } else if (status.error) {
-      console.error(`Playback Error: ${status.error}`);
     }
   };
 
@@ -105,8 +159,10 @@ export function useAudioPlayer() {
   };
 
   const seek = async (millis: number) => {
-    if (soundRef.current) {
-      await soundRef.current.setPositionAsync(millis);
+    if (globalSound) {
+      try {
+        await globalSound.setPositionAsync(millis);
+      } catch {}
       setPositionMillis(millis);
     }
   };
