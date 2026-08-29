@@ -8,6 +8,7 @@ import {
   ScrollView,
   useWindowDimensions,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
 import { Search, X } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -265,6 +266,13 @@ export default function SearchScreen() {
           placeholder="SEARCH ARTISTS, ALBUMS, SONGS"
           value={query}
           onChangeText={setQuery}
+          autoFocus={Platform.OS === 'web'}
+          returnKeyType="search"
+          onSubmitEditing={() => {
+            if (query.trim().length >= 2) {
+              performSearch(query.trim());
+            }
+          }}
           leftIcon={<Search color="black" size={24} />}
           rightIcon={
             query.length > 0 ? (

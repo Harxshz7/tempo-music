@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import { View, Image, Pressable, FlatList, SafeAreaView } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming, Easing } from 'react-native-reanimated';
 import { ChevronDown, SkipBack, SkipForward, Play, Pause, Shuffle, Repeat } from 'lucide-react-native';
@@ -63,13 +63,16 @@ const HalftoneBackground = () => (
 
 export default function PlayerScreen() {
   const navigation = useNavigation();
+  const [trackWidth, setTrackWidth] = useState(0);
   const { currentTrack, isPlaying, positionMillis, durationMillis, queue, queueIndex, playNext, playPrevious, playTrack } = usePlayerStore();
   const { play, pause, seek } = useAudioPlayer();
 
-  const progressPercent = durationMillis > 0 ? (positionMillis / durationMillis) * 100 : 0;
+  const validDuration = durationMillis > 0 && isFinite(durationMillis) ? durationMillis : (currentTrack?.duration ? currentTrack.duration * 1000 : 0);
+  const validPosition = positionMillis > 0 && isFinite(positionMillis) ? positionMillis : 0;
+  const progressPercent = validDuration > 0 ? Math.min(100, Math.max(0, (validPosition / validDuration) * 100)) : 0;
 
   const formatTime = (millis: number) => {
-    if (isNaN(millis) || millis < 0) return '0:00';
+    if (isNaN(millis) || !isFinite(millis) || millis < 0) return '0:00';
     const totalSeconds = Math.floor(millis / 1000);
     const minutes = Math.floor(totalSeconds / 60);
     const seconds = totalSeconds % 60;
@@ -85,10 +88,10 @@ export default function PlayerScreen() {
   };
 
   const handleSeek = (e: any) => {
-    if (durationMillis === 0) return;
-    const { locationX, layout } = e.nativeEvent;
-    const seekPercent = locationX / layout.width;
-    seek(seekPercent * durationMillis);
+    if (validDuration <= 0 || trackWidth <= 0) return;
+    const locationX = e.nativeEvent.locationX ?? e.nativeEvent.offsetX ?? 0;
+    const seekPercent = Math.max(0, Math.min(1, locationX / trackWidth));
+    seek(seekPercent * validDuration);
   };
 
   if (!currentTrack) {
@@ -148,15 +151,19 @@ export default function PlayerScreen() {
 
       {/* Scrubber */}
       <View className="px-8 mt-8">
-        <Pressable onPress={handleSeek} className="h-3 bg-white border-4 border-black w-full relative">
+        <Pressable 
+          onPress={handleSeek} 
+          onLayout={(e) => setTrackWidth(e.nativeEvent.layout.width)}
+          className="h-3 bg-white border-4 border-black w-full relative"
+        >
           <View 
             className="absolute top-0 left-0 bottom-0 bg-neo-secondary border-r-4 border-black" 
             style={{ width: `${progressPercent}%` }} 
           />
         </Pressable>
         <View className="flex-row justify-between mt-3">
-          <NeoText variant="caption" className="font-bold text-sm">{formatTime(positionMillis)}</NeoText>
-          <NeoText variant="caption" className="font-bold text-sm">-{formatTime(durationMillis - positionMillis)}</NeoText>
+          <NeoText variant="caption" className="font-bold text-sm">{formatTime(validPosition)}</NeoText>
+          <NeoText variant="caption" className="font-bold text-sm">-{formatTime(Math.max(0, validDuration - validPosition))}</NeoText>
         </View>
       </View>
 

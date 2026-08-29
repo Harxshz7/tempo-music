@@ -65,6 +65,14 @@ npm run ios
 npm run android
 ```
 
+### Web Setup & Server CORS Note
+
+When running Tempo in a web browser (`npm run web`), modern browsers enforce strict Cross-Origin Resource Sharing (CORS) rules on audio streams and cover art images. Native iOS and Android apps bypass browser CORS restrictions, but web clients require your Subsonic/Navidrome server to send proper CORS headers.
+
+If cover art or audio fails to load on web:
+- **Navidrome**: Set `ND_ENABLECORS=true` in your environment or `EnableCORS = true` in `navidrome.toml`.
+- **Reverse Proxy (Nginx/Caddy/Traefik)**: Ensure headers such as `Access-Control-Allow-Origin: *` and `Access-Control-Allow-Methods: GET, POST, OPTIONS` are forwarded.
+
 ## Project Structure
 
 ```

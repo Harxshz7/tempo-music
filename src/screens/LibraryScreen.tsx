@@ -198,12 +198,15 @@ export default function LibraryScreen() {
         <View className="-rotate-1 self-start mb-4">
             <NeoText 
                 className="font-space-grotesk-black text-4xl uppercase tracking-tighter"
-                style={{
-                  color: 'transparent',
-                  WebkitTextStrokeWidth: '1.5px',
-                  WebkitTextStrokeColor: 'black',
-                  ...(Platform.OS !== 'web' ? { color: 'black' } : {})
-                } as any}
+                style={
+                  Platform.OS === 'web'
+                    ? ({
+                        color: 'transparent',
+                        WebkitTextStrokeWidth: '1.5px',
+                        WebkitTextStrokeColor: 'black',
+                      } as any)
+                    : { color: 'black' }
+                }
             >
               Library
             </NeoText>

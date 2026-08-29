@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   KeyboardAvoidingView,
   Platform,
   Pressable,
+  TextInput,
 } from 'react-native';
 import Svg, { Defs, Pattern, Circle, Rect } from 'react-native-svg';
 import { Eye, EyeOff } from 'lucide-react-native';
@@ -30,6 +31,9 @@ export default function LoginScreen() {
   
   const [showPassword, setShowPassword] = useState(false);
   const [hasAttempted, setHasAttempted] = useState(false);
+
+  const usernameRef = useRef<TextInput>(null);
+  const passwordRef = useRef<TextInput>(null);
 
   const { login, isLoading, error } = useAuthStore();
 
@@ -73,12 +77,15 @@ export default function LoginScreen() {
           <View className="-rotate-1">
             <NeoText 
                 className="font-space-grotesk-black text-6xl uppercase tracking-tighter"
-                style={{
-                  color: 'transparent',
-                  WebkitTextStrokeWidth: '2px',
-                  WebkitTextStrokeColor: 'black',
-                  ...(Platform.OS !== 'web' ? { color: 'black' } : {})
-                } as any}
+                style={
+                  Platform.OS === 'web'
+                    ? ({
+                        color: 'transparent',
+                        WebkitTextStrokeWidth: '2px',
+                        WebkitTextStrokeColor: 'black',
+                      } as any)
+                    : { color: 'black' }
+                }
             >
               Tempo
             </NeoText>
@@ -103,6 +110,9 @@ export default function LoginScreen() {
                 autoCapitalize="none"
                 autoCorrect={false}
                 keyboardType="url"
+                returnKeyType="next"
+                onSubmitEditing={() => usernameRef.current?.focus()}
+                blurOnSubmit={false}
               />
               {hasAttempted && !serverUrl && (
                 <NeoText variant="caption" className="text-neo-accent font-bold text-xs mt-1">Server URL is required</NeoText>
@@ -114,11 +124,15 @@ export default function LoginScreen() {
                 Username
               </NeoText>
               <NeoInput
+                ref={usernameRef}
                 placeholder="admin"
                 value={username}
                 onChangeText={setUsername}
                 autoCapitalize="none"
                 autoCorrect={false}
+                returnKeyType="next"
+                onSubmitEditing={() => passwordRef.current?.focus()}
+                blurOnSubmit={false}
               />
               {hasAttempted && !username && (
                 <NeoText variant="caption" className="text-neo-accent font-bold text-xs mt-1">Username is required</NeoText>
@@ -130,10 +144,13 @@ export default function LoginScreen() {
                 Password
               </NeoText>
               <NeoInput
+                ref={passwordRef}
                 placeholder="••••••••"
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry={!showPassword}
+                returnKeyType="go"
+                onSubmitEditing={handleLogin}
                 rightIcon={
                   <Pressable onPress={() => setShowPassword(!showPassword)} className="p-2">
                     {showPassword ? <EyeOff size={20} color="black" /> : <Eye size={20} color="black" />}

@@ -157,12 +157,15 @@ export default function SettingsScreen() {
         <View className="mb-8 items-center -rotate-1 mt-4">
           <NeoText 
               className="font-space-grotesk-black text-4xl uppercase tracking-tighter"
-              style={{
-                color: 'transparent',
-                WebkitTextStrokeWidth: '2px',
-                WebkitTextStrokeColor: 'black',
-                ...(Platform.OS !== 'web' ? { color: 'black' } : {})
-              } as any}
+              style={
+                Platform.OS === 'web'
+                  ? ({
+                      color: 'transparent',
+                      WebkitTextStrokeWidth: '2px',
+                      WebkitTextStrokeColor: 'black',
+                    } as any)
+                  : { color: 'black' }
+              }
           >
             SETTINGS
           </NeoText>

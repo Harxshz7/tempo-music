@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Image, Pressable } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming, Easing } from 'react-native-reanimated';
 import { SkipBack, SkipForward, Play, Pause } from 'lucide-react-native';
@@ -50,18 +50,21 @@ const MechButton = ({ children, onPress, className, iconColor = "#000" }: any) =
 
 export function NeoPlayerBar() {
   const navigation = useNavigation<any>();
-  const { currentTrack, isPlaying, positionMillis, durationMillis, togglePlay, playNext, playPrevious } = usePlayerStore();
+  const [trackWidth, setTrackWidth] = useState(0);
+  const { currentTrack, isPlaying, positionMillis, durationMillis, playNext, playPrevious } = usePlayerStore();
   const { play, pause, seek } = useAudioPlayer();
 
   if (!currentTrack) return null;
 
-  const progressPercent = durationMillis > 0 ? (positionMillis / durationMillis) * 100 : 0;
+  const validDuration = durationMillis > 0 && isFinite(durationMillis) ? durationMillis : (currentTrack.duration ? currentTrack.duration * 1000 : 0);
+  const validPosition = positionMillis > 0 && isFinite(positionMillis) ? positionMillis : 0;
+  const progressPercent = validDuration > 0 ? Math.min(100, Math.max(0, (validPosition / validDuration) * 100)) : 0;
 
   const handleSeek = (e: any) => {
-    if (durationMillis === 0) return;
-    const { locationX, layout } = e.nativeEvent;
-    const seekPercent = locationX / layout.width;
-    seek(seekPercent * durationMillis);
+    if (validDuration <= 0 || trackWidth <= 0) return;
+    const locationX = e.nativeEvent.locationX ?? e.nativeEvent.offsetX ?? 0;
+    const seekPercent = Math.max(0, Math.min(1, locationX / trackWidth));
+    seek(seekPercent * validDuration);
   };
 
   const handlePlayPause = () => {
@@ -75,7 +78,11 @@ export function NeoPlayerBar() {
   return (
     <View className="bg-neo-accent border-t-4 border-black w-full">
       {/* Progress Track */}
-      <Pressable onPress={handleSeek} className="h-2 bg-white border-b-2 border-black w-full relative">
+      <Pressable 
+        onPress={handleSeek} 
+        onLayout={(e) => setTrackWidth(e.nativeEvent.layout.width)}
+        className="h-2 bg-white border-b-2 border-black w-full relative"
+      >
         <View 
           className="absolute top-0 left-0 bottom-0 bg-neo-secondary border-r-2 border-black" 
           style={{ width: `${progressPercent}%` }} 
