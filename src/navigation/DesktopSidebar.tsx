@@ -102,17 +102,10 @@ export default function DesktopSidebar() {
             })}
           </View>
         </View>
-
-        {/* Footer info in sidebar pinned to bottom */}
-        <View className="border-t-2 border-black pt-4 pb-2">
-          <NeoText variant="caption" className="font-bold uppercase text-[10px] opacity-40">
-            Tempo Subsonic Client
-          </NeoText>
-        </View>
       </View>
 
       {/* Main Content Area */}
-      <View className="flex-1 bg-neo-bg h-full overflow-hidden">
+      <View className="flex-1 bg-neo-bg">
         {renderActiveScreen()}
       </View>
     </View>
