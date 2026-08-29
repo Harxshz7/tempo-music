@@ -14,6 +14,7 @@ import SettingsScreen from '../screens/SettingsScreen';
 import PlayerScreen from '../screens/PlayerScreen';
 import AlbumDetailScreen from '../screens/AlbumDetailScreen';
 import ArtistDetailScreen from '../screens/ArtistDetailScreen';
+import PlaylistDetailScreen from '../screens/PlaylistDetailScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -87,6 +88,7 @@ export default function Navigation() {
               />
               <Stack.Screen name="AlbumDetail" component={AlbumDetailScreen} />
               <Stack.Screen name="ArtistDetail" component={ArtistDetailScreen} />
+              <Stack.Screen name="PlaylistDetail" component={PlaylistDetailScreen} />
               <Stack.Screen name="Player" component={PlayerScreen} options={{ presentation: 'modal' }} />
             </>
           ) : (
@@ -96,7 +98,7 @@ export default function Navigation() {
         
         {/* Render player bar. On desktop pinned to bottom-0, on mobile pinned above the 50px tab bar. */}
         {isAuthenticated && (
-          <View className={`absolute ${isDesktop ? 'bottom-0' : 'bottom-[50px]'} w-full z-50`}>
+          <View pointerEvents="box-none" className={`absolute ${isDesktop ? 'bottom-0' : 'bottom-[50px]'} w-full z-50`}>
             <NeoPlayerBar />
           </View>
         )}

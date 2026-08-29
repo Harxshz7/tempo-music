@@ -154,13 +154,15 @@ export default function LibraryScreen() {
   );
 
   const renderPlaylist = ({ item }: { item: Playlist }) => (
-    <Pressable className="px-4 mb-3">
+    <Pressable 
+      onPress={() => navigation.navigate('PlaylistDetail', { playlistId: item.id })}
+      className="px-4 mb-3"
+    >
       <View className="bg-white border-2 border-black p-2 flex-row items-center shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
         <View className="w-11 h-11 border-2 border-black bg-neo-muted mr-3">
-            {/* Playlist usually doesn't have coverArtUrl out of the box in simple subsonic types, but we'll put a placeholder */}
-            <View className="w-full h-full bg-neo-secondary items-center justify-center">
-              <NeoText variant="caption" className="font-black text-xs text-white">PL</NeoText>
-            </View>
+          <View className="w-full h-full bg-neo-secondary items-center justify-center">
+            <NeoText variant="caption" className="font-black text-xs text-white">PL</NeoText>
+          </View>
         </View>
         <View className="flex-1">
           <NeoText variant="body" className="font-bold uppercase text-base tracking-tight">{item.name}</NeoText>
