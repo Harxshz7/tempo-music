@@ -205,11 +205,35 @@ export default function SettingsScreen() {
             <NeoText className="font-black uppercase text-xs tracking-widest">PLAYBACK</NeoText>
           </View>
           <View className="p-4 flex-row justify-between items-center border-b-2 border-black/20">
-            <NeoText className="font-bold text-sm flex-shrink mr-4">Background Playback</NeoText>
+            <View className="flex-1 mr-4">
+              <View className="flex-row items-center gap-2">
+                <NeoText className="font-bold text-sm">Background Playback</NeoText>
+                <NeoBadge 
+                  label={bgPlayback ? "ENABLED" : "DISABLED"} 
+                  variant={bgPlayback ? "secondary" : "primary"}
+                  className={!bgPlayback ? "bg-neo-bg" : ""}
+                />
+              </View>
+              <NeoText variant="caption" className="font-medium text-xs opacity-60 mt-0.5">
+                Keep music playing when app is in background
+              </NeoText>
+            </View>
             <NeoSwitch value={bgPlayback} onValueChange={handleBgPlayback} />
           </View>
           <View className="p-4 flex-row justify-between items-center">
-            <NeoText className="font-bold text-sm flex-shrink mr-4">Download Over Wi-Fi Only</NeoText>
+            <View className="flex-1 mr-4">
+              <View className="flex-row items-center gap-2">
+                <NeoText className="font-bold text-sm">Download Over Wi-Fi Only</NeoText>
+                <NeoBadge 
+                  label={wifiOnly ? "ENABLED" : "DISABLED"} 
+                  variant={wifiOnly ? "secondary" : "primary"}
+                  className={!wifiOnly ? "bg-neo-bg" : ""}
+                />
+              </View>
+              <NeoText variant="caption" className="font-medium text-xs opacity-60 mt-0.5">
+                Save cellular data when caching songs
+              </NeoText>
+            </View>
             <NeoSwitch value={wifiOnly} onValueChange={handleWifiOnly} />
           </View>
         </NeoCard>
