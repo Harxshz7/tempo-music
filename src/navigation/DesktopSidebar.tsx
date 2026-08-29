@@ -58,9 +58,9 @@ export default function DesktopSidebar() {
   };
 
   return (
-    <View className="flex-1 flex-row bg-neo-bg">
+    <View className="flex-1 flex-row bg-neo-bg h-full">
       {/* Left Sidebar */}
-      <View className="w-64 bg-white border-r-4 border-black p-6 flex-col justify-between">
+      <View className="w-64 bg-white border-r-4 border-black p-6 flex-col justify-between h-full">
         <View>
           {/* Logo */}
           <View className="mb-8 -rotate-1">
@@ -103,8 +103,8 @@ export default function DesktopSidebar() {
           </View>
         </View>
 
-        {/* Footer info in sidebar */}
-        <View className="border-t-2 border-black pt-4">
+        {/* Footer info in sidebar pinned to bottom */}
+        <View className="border-t-2 border-black pt-4 pb-2">
           <NeoText variant="caption" className="font-bold uppercase text-[10px] opacity-40">
             Tempo Subsonic Client
           </NeoText>
@@ -112,7 +112,7 @@ export default function DesktopSidebar() {
       </View>
 
       {/* Main Content Area */}
-      <View className="flex-1 bg-neo-bg">
+      <View className="flex-1 bg-neo-bg h-full overflow-hidden">
         {renderActiveScreen()}
       </View>
     </View>
