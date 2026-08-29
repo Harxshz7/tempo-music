@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import Svg, { Defs, Pattern, Circle, Rect } from 'react-native-svg';
-import { cacheDirectory, readDirectoryAsync, getInfoAsync, deleteAsync } from 'expo-file-system';
+import { cacheDirectory, readDirectoryAsync, getInfoAsync, deleteAsync } from 'expo-file-system/legacy';
 import Constants from 'expo-constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import subsonic from '../api/subsonic';
