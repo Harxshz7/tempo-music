@@ -76,7 +76,7 @@ export default function LibraryScreen() {
     const offset = refresh ? 0 : albumOffset;
     const limit = 50;
     try {
-      const data = await subsonic.getAlbumList2('alphabeticalByName', limit, offset);
+      const data = (await subsonic.getAlbumList2('alphabeticalByName', limit, offset)) ?? [];
       if (data.length < limit) setHasMoreAlbums(false);
       setAlbums(prev => refresh ? data : [...prev, ...data]);
       setAlbumOffset(offset + limit);
@@ -88,7 +88,7 @@ export default function LibraryScreen() {
   const loadArtists = async () => {
     try {
       const data = await subsonic.getArtists();
-      const sections = (data.index ?? []).map(idx => ({
+      const sections = (data?.index ?? []).map(idx => ({
         title: idx.name,
         data: idx.artist ?? []
       }));
@@ -100,7 +100,7 @@ export default function LibraryScreen() {
 
   const loadPlaylists = async () => {
     try {
-      const data = await subsonic.getPlaylists();
+      const data = (await subsonic.getPlaylists()) ?? [];
       setPlaylists(data);
     } catch (e: any) {
       throw new Error(e?.message ?? 'Failed to load playlists');

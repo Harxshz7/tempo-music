@@ -58,9 +58,9 @@ export default function SearchScreen() {
     try {
       const res = await subsonic.search3(text, 50, 50, 50);
       setResults({
-        artists: res.artist?.artist ?? [],
-        albums: res.album?.album ?? [],
-        songs: res.song?.song ?? [],
+        artists: res.artist ?? [],
+        albums: res.album ?? [],
+        songs: res.song ?? [],
       });
       setHasSearched(true);
     } catch (e) {

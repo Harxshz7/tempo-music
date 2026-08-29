@@ -137,48 +137,76 @@ class SubsonicClient {
 
   /** Get an indexed collection of artists */
   async getArtists(): Promise<ArtistIndex> {
-    const result = await this.request<ArtistIndex>('getArtists');
-    return result;
+    const result = await this.request<{ artists?: ArtistIndex; index?: any[] }>('getArtists');
+    if (result.artists) {
+      return {
+        ...result.artists,
+        index: result.artists.index ?? [],
+      };
+    }
+    if (result.index) {
+      return { index: result.index };
+    }
+    return { index: [] };
   }
 
   /** Get details for a single artist, including albums */
   async getArtist(
     id: string
   ): Promise<{ artist: Artist; album: Album[] }> {
-    const result = await this.request<{ artist: Artist; album: Album[] }>(
+    const result = await this.request<{ artist?: Artist & { album?: Album[] }; album?: Album[] }>(
       'getArtist',
       { id }
     );
-    return result;
+    const artist = result.artist || (result as any) || { id, name: 'Unknown' };
+    const album = result.artist?.album ?? result.album ?? [];
+    return { artist, album };
   }
 
   /** Get details for a single album, including songs */
   async getAlbum(id: string): Promise<{ album: Album; song: Song[] }> {
-    const result = await this.request<{ album: Album; song: Song[] }>(
+    const result = await this.request<{ album?: Album & { song?: Song[] }; song?: Song[] }>(
       'getAlbum',
       { id }
     );
-    return result;
+    const album = result.album || (result as any) || { id, name: 'Unknown' };
+    const song = result.album?.song ?? result.song ?? [];
+    return { album, song };
   }
 
   /** Get a sorted list of albums */
-  async getAlbumList2(type: AlbumListType, size = 50, offset = 0) {
-    const result = await this.request<{ albumList2: { album: Album[] } }>(
+  async getAlbumList2(type: AlbumListType, size = 50, offset = 0): Promise<Album[]> {
+    const result = await this.request<{ albumList2?: { album?: Album[] } }>(
       'getAlbumList2',
       { type, size, offset }
     );
-    return result.albumList2.album;
+    return result.albumList2?.album ?? [];
   }
 
   /** Full-text search across artists, albums, and songs */
   async search3(query: string, artistCount = 10, albumCount = 10, songCount = 10) {
-    const result = await this.request<SearchResults>('search3', {
+    const result = await this.request<{
+      searchResult3?: { artist?: Artist[]; album?: Album[]; song?: Song[] };
+      searchResult2?: { artist?: Artist[]; album?: Album[]; song?: Song[] };
+      artist?: { artist?: Artist[] };
+      album?: { album?: Album[] };
+      song?: { song?: Song[] };
+    }>('search3', {
       query,
       artistCount,
       albumCount,
       songCount,
     });
-    return result;
+
+    const artists = result.searchResult3?.artist ?? result.searchResult2?.artist ?? result.artist?.artist ?? [];
+    const albums = result.searchResult3?.album ?? result.searchResult2?.album ?? result.album?.album ?? [];
+    const songs = result.searchResult3?.song ?? result.searchResult2?.song ?? result.song?.song ?? [];
+
+    return {
+      artist: artists,
+      album: albums,
+      song: songs,
+    };
   }
 
   /** Get the URL for a cover art image */
@@ -197,7 +225,7 @@ class SubsonicClient {
 
   /** Get all playlists */
   async getPlaylists(): Promise<Playlist[]> {
-    const result = await this.request<{ playlists: { playlist: Playlist[] } }>(
+    const result = await this.request<{ playlists?: { playlist?: Playlist[] } }>(
       'getPlaylists'
     );
     return result.playlists?.playlist ?? [];
@@ -208,10 +236,12 @@ class SubsonicClient {
     id: string
   ): Promise<{ playlist: Playlist; entry: Song[] }> {
     const result = await this.request<{
-      playlist: Playlist;
-      entry: Song[];
+      playlist?: Playlist & { entry?: Song[] };
+      entry?: Song[];
     }>('getPlaylist', { id });
-    return result;
+    const playlist = result.playlist || (result as any) || { id, name: 'Playlist' };
+    const entry = result.playlist?.entry ?? result.entry ?? [];
+    return { playlist, entry };
   }
 
   /** Update a playlist */
