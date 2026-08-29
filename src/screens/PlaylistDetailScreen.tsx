@@ -12,6 +12,7 @@ import {
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { ChevronLeft, Play, Shuffle, MoreHorizontal, ListMusic } from 'lucide-react-native';
 import subsonic from '../api/subsonic';
+import { useResponsive } from '../hooks/useResponsive';
 import { NeoText, NeoButton, NeoCard, NeoBadge, NeoInput } from '../components/ui';
 import { usePlayerStore, Track } from '../store/playerStore';
 import { TrackRow } from '../components';
@@ -37,6 +38,7 @@ export default function PlaylistDetailScreen() {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
   const playlistId = route.params?.playlistId;
+  const { containerClass, isDesktop } = useResponsive();
 
   const [playlist, setPlaylist] = useState<Playlist | null>(null);
   const [songs, setSongs] = useState<Song[]>([]);
@@ -258,7 +260,7 @@ export default function PlaylistDetailScreen() {
           )}
         </View>
         
-        <View className="w-[55%] aspect-square border-4 border-black -rotate-1 shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] bg-neo-muted mb-8 mt-4 relative overflow-hidden">
+        <View className="w-48 sm:w-60 aspect-square border-4 border-black -rotate-1 shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] bg-neo-muted mb-8 mt-4 relative overflow-hidden">
            {renderCoverArt()}
         </View>
         
@@ -278,7 +280,7 @@ export default function PlaylistDetailScreen() {
           )}
         </View>
 
-        <View className="flex-row items-center justify-center gap-3 mt-8 w-full px-6">
+        <View className="flex-row items-center justify-center gap-3 mt-8 w-full max-w-md px-6">
           <NeoButton 
             label="PLAY ALL" 
             variant="primary" 
@@ -323,44 +325,47 @@ export default function PlaylistDetailScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-neo-bg">
-      <FlatList
-        data={songs}
-        keyExtractor={(item) => item.id}
-        renderItem={renderItem}
-        ListHeaderComponent={renderHeader}
-        ListEmptyComponent={renderEmpty}
-        ListFooterComponent={<View className="h-[90px]" />}
-      />
-      
-      {error && !isLoading && (
-        <View className="absolute bottom-[90px] left-4 right-4 bg-neo-accent border-4 border-black p-4 items-center shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-          <NeoText variant="body" className="font-bold text-center mb-4">{error}</NeoText>
-          <NeoButton label="RETRY" onPress={loadData} />
-        </View>
-      )}
+      <View className={`flex-1 ${containerClass}`}>
+        <FlatList
+          data={songs}
+          keyExtractor={(item) => item.id}
+          renderItem={renderItem}
+          ListHeaderComponent={renderHeader}
+          ListEmptyComponent={renderEmpty}
+          ListFooterComponent={<View className="h-[90px]" />}
+          contentContainerStyle={{ paddingHorizontal: isDesktop ? 16 : 0 }}
+        />
+        
+        {error && !isLoading && (
+          <View className="absolute bottom-[90px] left-4 right-4 bg-neo-accent border-4 border-black p-4 items-center shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+            <NeoText variant="body" className="font-bold text-center mb-4">{error}</NeoText>
+            <NeoButton label="RETRY" onPress={loadData} />
+          </View>
+        )}
 
-      <Modal
-        visible={isRenameModalVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setIsRenameModalVisible(false)}
-      >
-        <View className="flex-1 justify-center items-center bg-black/50 px-4">
-          <NeoCard className="w-full p-6 bg-neo-bg">
-            <NeoText variant="h3" className="font-black mb-4">Rename Playlist</NeoText>
-            <NeoInput 
-              value={newName} 
-              onChangeText={setNewName} 
-              placeholder="Playlist Name" 
-              autoFocus 
-            />
-            <View className="flex-row justify-end mt-6 gap-3">
-              <NeoButton label="Cancel" variant="ghost" onPress={() => setIsRenameModalVisible(false)} />
-              <NeoButton label="Save" variant="primary" onPress={handleRenamePlaylist} />
-            </View>
-          </NeoCard>
-        </View>
-      </Modal>
+        <Modal
+          visible={isRenameModalVisible}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setIsRenameModalVisible(false)}
+        >
+          <View className="flex-1 justify-center items-center bg-black/50 px-4">
+            <NeoCard className="w-full max-w-md p-6 bg-neo-bg">
+              <NeoText variant="h3" className="font-black mb-4">Rename Playlist</NeoText>
+              <NeoInput 
+                value={newName} 
+                onChangeText={setNewName} 
+                placeholder="Playlist Name" 
+                autoFocus 
+              />
+              <View className="flex-row justify-end mt-6 gap-3">
+                <NeoButton label="Cancel" variant="ghost" onPress={() => setIsRenameModalVisible(false)} />
+                <NeoButton label="Save" variant="primary" onPress={handleRenamePlaylist} />
+              </View>
+            </NeoCard>
+          </View>
+        </Modal>
+      </View>
     </SafeAreaView>
   );
 }

@@ -67,10 +67,14 @@ export default function LoginScreen() {
   return (
     <KeyboardAvoidingView
       className="flex-1 bg-neo-bg relative"
+      style={Platform.OS === 'web' ? ({ minHeight: '100vh', display: 'flex' } as any) : undefined}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <HalftoneBackground />
-      <View className="flex-1 justify-center items-center px-6">
+      <View 
+        className="flex-1 justify-center items-center px-6 py-12"
+        style={Platform.OS === 'web' ? ({ minHeight: '100vh' } as any) : undefined}
+      >
         
         {/* Header Block */}
         <View className="items-center mb-10 z-10">

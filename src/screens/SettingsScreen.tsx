@@ -16,6 +16,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import subsonic from '../api/subsonic';
 import { useAuthStore } from '../store/authStore';
 import { usePlayerStore } from '../store/playerStore';
+import { useResponsive } from '../hooks/useResponsive';
 import { NeoText, NeoButton, NeoCard, NeoBadge, NeoSwitch } from '../components/ui';
 
 const HalftoneBackground = () => (
@@ -34,6 +35,7 @@ const HalftoneBackground = () => (
 export default function SettingsScreen() {
   const navigation = useNavigation<any>();
   const { serverConfig, logout } = useAuthStore();
+  const { containerClass } = useResponsive();
   
   const [serverStatus, setServerStatus] = useState<'checking' | 'ok' | 'error'>('checking');
   const [bgPlayback, setBgPlayback] = useState(false);
@@ -151,10 +153,11 @@ export default function SettingsScreen() {
   return (
     <SafeAreaView className="flex-1 bg-neo-bg">
       <HalftoneBackground />
-      <ScrollView className="flex-1 px-4" contentContainerStyle={{ paddingBottom: 90, paddingTop: 16 }}>
-        
-        {/* Header */}
-        <View className="mb-8 items-center -rotate-1 mt-4">
+      <View className={`flex-1 ${containerClass}`}>
+        <ScrollView className="flex-1 px-4" contentContainerStyle={{ paddingBottom: 90, paddingTop: 16 }}>
+          
+          {/* Header */}
+          <View className="mb-8 items-center -rotate-1 mt-4">
           <NeoText 
               className="font-space-grotesk-black text-4xl uppercase tracking-tighter"
               style={
@@ -256,7 +259,8 @@ export default function SettingsScreen() {
           />
         </View>
 
-      </ScrollView>
+        </ScrollView>
+      </View>
     </SafeAreaView>
   );
 }

@@ -55,10 +55,13 @@ function MainTabs() {
   );
 }
 
+import { useResponsive } from '../hooks/useResponsive';
+import DesktopSidebar from '../navigation/DesktopSidebar';
 import { NeoPlayerBar } from './NeoPlayerBar';
 
 export default function Navigation() {
   const { isAuthenticated, isLoading, restoreSession } = useAuthStore();
+  const { isDesktop } = useResponsive();
 
   useEffect(() => {
     restoreSession();
@@ -74,11 +77,14 @@ export default function Navigation() {
 
   return (
     <NavigationContainer>
-      <View className="flex-1 relative">
+      <View className="flex-1 relative bg-neo-bg">
         <Stack.Navigator screenOptions={{ headerShown: false }}>
           {isAuthenticated ? (
             <>
-              <Stack.Screen name="Main" component={MainTabs} />
+              <Stack.Screen 
+                name="Main" 
+                component={isDesktop ? DesktopSidebar : MainTabs} 
+              />
               <Stack.Screen name="AlbumDetail" component={AlbumDetailScreen} />
               <Stack.Screen name="ArtistDetail" component={ArtistDetailScreen} />
               <Stack.Screen name="Player" component={PlayerScreen} options={{ presentation: 'modal' }} />
@@ -88,12 +94,9 @@ export default function Navigation() {
           )}
         </Stack.Navigator>
         
-        {/* Render player bar absolutely above bottom tabs. 
-            Standard tab bar is ~50-80px depending on platform/safe area. 
-            We use bottom-14 (56px) as a generic offset for the demo, 
-            or better yet, render it at the bottom of the screen if tabs are hidden. */}
+        {/* Render player bar. On desktop pinned to bottom-0, on mobile pinned above the 50px tab bar. */}
         {isAuthenticated && (
-          <View className="absolute bottom-[50px] w-full z-50">
+          <View className={`absolute ${isDesktop ? 'bottom-0' : 'bottom-[50px]'} w-full z-50`}>
             <NeoPlayerBar />
           </View>
         )}

@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { View, Image, Pressable, FlatList, SafeAreaView } from 'react-native';
+import { View, Image, Pressable, FlatList, SafeAreaView, ScrollView } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming, Easing } from 'react-native-reanimated';
 import { ChevronDown, SkipBack, SkipForward, Play, Pause, Shuffle, Repeat } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -7,6 +7,7 @@ import Svg, { Defs, Pattern, Circle, Rect } from 'react-native-svg';
 
 import { usePlayerStore, Track } from '../store/playerStore';
 import { useAudioPlayer } from '../hooks/useAudioPlayer';
+import { useResponsive } from '../hooks/useResponsive';
 import { NeoText, HardShadow, NeoCard } from '../components/ui';
 
 const MechButton = ({ children, onPress, className, shadowClassName = "bg-black w-full h-full", hideBorder = false }: any) => {
@@ -64,6 +65,7 @@ const HalftoneBackground = () => (
 export default function PlayerScreen() {
   const navigation = useNavigation();
   const [trackWidth, setTrackWidth] = useState(0);
+  const { isWide, containerClass } = useResponsive();
   const { currentTrack, isPlaying, positionMillis, durationMillis, queue, queueIndex, playNext, playPrevious, playTrack } = usePlayerStore();
   const { play, pause, seek } = useAudioPlayer();
 
@@ -104,6 +106,80 @@ export default function PlayerScreen() {
 
   const upcomingQueue = queue.slice(queueIndex + 1);
 
+  const renderScrubber = () => (
+    <View className="w-full">
+      <Pressable 
+        onPress={handleSeek} 
+        onLayout={(e) => setTrackWidth(e.nativeEvent.layout.width)}
+        className="h-3 bg-white border-4 border-black w-full relative"
+      >
+        <View 
+          className="absolute top-0 left-0 bottom-0 bg-neo-secondary border-r-4 border-black" 
+          style={{ width: `${progressPercent}%` }} 
+        />
+      </Pressable>
+      <View className="flex-row justify-between mt-3">
+        <NeoText variant="caption" className="font-bold text-sm">{formatTime(validPosition)}</NeoText>
+        <NeoText variant="caption" className="font-bold text-sm">-{formatTime(Math.max(0, validDuration - validPosition))}</NeoText>
+      </View>
+    </View>
+  );
+
+  const renderControls = () => (
+    <View className="flex-row items-center justify-center gap-4 mt-6">
+      <MechButton onPress={() => {}} className="w-12 h-12 bg-transparent" shadowClassName="hidden" hideBorder>
+        <Shuffle size={24} color="black" />
+      </MechButton>
+      
+      <MechButton onPress={playPrevious} className="w-14 h-14 bg-neo-bg">
+        <SkipBack size={24} color="black" fill="black" />
+      </MechButton>
+      
+      <MechButton onPress={handlePlayPause} className="w-[72px] h-[72px] bg-neo-accent">
+        {isPlaying ? <Pause size={32} color="black" fill="black" /> : <Play size={32} color="black" fill="black" />}
+      </MechButton>
+      
+      <MechButton onPress={playNext} className="w-14 h-14 bg-neo-bg">
+        <SkipForward size={24} color="black" fill="black" />
+      </MechButton>
+      
+      <MechButton onPress={() => {}} className="w-12 h-12 bg-transparent" shadowClassName="hidden" hideBorder>
+        <Repeat size={24} color="black" />
+      </MechButton>
+    </View>
+  );
+
+  const renderQueueList = () => (
+    <FlatList
+      data={upcomingQueue}
+      keyExtractor={(item, index) => item.id + '-' + index}
+      renderItem={({ item }) => (
+        <Pressable onPress={() => playTrack(item)}>
+          <NeoCard noShadow className="flex-row items-center p-2 mb-3 bg-neo-bg border-4 border-black">
+            <Image 
+              source={item.coverArtUrl ? { uri: item.coverArtUrl } : require('../../assets/icon.png')} 
+              className="w-11 h-11 border-4 border-black bg-neo-muted"
+            />
+            <View className="flex-1 ml-4 justify-center">
+              <NeoText variant="body" numberOfLines={1} className="font-bold text-sm leading-tight uppercase tracking-tight">
+                {item.title}
+              </NeoText>
+              <NeoText variant="caption" numberOfLines={1} className="text-xs opacity-70 font-bold uppercase tracking-wider mt-0.5">
+                {item.artist}
+              </NeoText>
+            </View>
+          </NeoCard>
+        </Pressable>
+      )}
+      showsVerticalScrollIndicator={false}
+      ListEmptyComponent={
+        <View className="py-8 items-center">
+          <NeoText variant="caption" className="font-bold uppercase opacity-50">Queue is empty</NeoText>
+        </View>
+      }
+    />
+  );
+
   return (
     <SafeAreaView className="flex-1 bg-neo-bg">
       <HalftoneBackground />
@@ -121,104 +197,94 @@ export default function PlayerScreen() {
         </NeoText>
       </View>
 
-      {/* Album Art */}
-      <View className="items-center mt-4">
-        <View className="w-[80%] aspect-square relative -rotate-1">
-          {/* Shadow */}
-          <View className="absolute top-[12px] left-[12px] right-[-12px] bottom-[-12px] bg-black" />
-          <Image 
-            source={currentTrack.coverArtUrl ? { uri: currentTrack.coverArtUrl } : require('../../assets/icon.png')} 
-            className="w-full h-full bg-neo-muted border-4 border-black"
-          />
-          {/* Badge */}
-          <View className="absolute -top-3 -right-3 bg-neo-secondary border-2 border-black rotate-3 px-2 py-1">
-            <NeoText variant="caption" className="font-black uppercase text-xs">
-              FLAC
-            </NeoText>
+      {isWide ? (
+        /* Desktop / Wide 2-Column Layout */
+        <View className="flex-1 flex-row px-8 pb-8 gap-8 max-w-6xl w-full mx-auto">
+          {/* Left Column: Art + Info + Scrubber + Controls */}
+          <View className="w-[48%] bg-white border-4 border-black p-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] items-center justify-between">
+            <View className="w-64 h-64 border-4 border-black -rotate-1 relative shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] bg-neo-muted">
+              <Image 
+                source={currentTrack.coverArtUrl ? { uri: currentTrack.coverArtUrl } : require('../../assets/icon.png')} 
+                className="w-full h-full bg-neo-muted"
+              />
+              <View className="absolute -top-3 -right-3 bg-neo-secondary border-2 border-black rotate-3 px-2 py-1">
+                <NeoText variant="caption" className="font-black uppercase text-xs">
+                  FLAC
+                </NeoText>
+              </View>
+            </View>
+
+            <View className="w-full items-center my-4">
+              <NeoText variant="h2" numberOfLines={1} ellipsizeMode="tail" className="font-black tracking-tight text-3xl uppercase text-center">
+                {currentTrack.title}
+              </NeoText>
+              <NeoText variant="body" numberOfLines={1} ellipsizeMode="tail" className="font-bold uppercase text-base opacity-70 text-center mt-1">
+                {currentTrack.artist}
+              </NeoText>
+            </View>
+
+            <View className="w-full">
+              {renderScrubber()}
+              {renderControls()}
+            </View>
+          </View>
+
+          {/* Right Column: Up Next Queue */}
+          <View className="flex-1 bg-white border-4 border-black p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+            <View className="border-b-4 border-black pb-2 mb-4 self-start">
+              <NeoText variant="caption" className="font-black uppercase tracking-widest text-sm">Up Next</NeoText>
+            </View>
+            {renderQueueList()}
           </View>
         </View>
-      </View>
+      ) : (
+        /* Mobile Stacked Layout */
+        <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
+          {/* Album Art */}
+          <View className="items-center mt-4">
+            <View className="w-[80%] max-w-[320px] aspect-square relative -rotate-1">
+              <View className="absolute top-[12px] left-[12px] right-[-12px] bottom-[-12px] bg-black" />
+              <Image 
+                source={currentTrack.coverArtUrl ? { uri: currentTrack.coverArtUrl } : require('../../assets/icon.png')} 
+                className="w-full h-full bg-neo-muted border-4 border-black"
+              />
+              <View className="absolute -top-3 -right-3 bg-neo-secondary border-2 border-black rotate-3 px-2 py-1">
+                <NeoText variant="caption" className="font-black uppercase text-xs">
+                  FLAC
+                </NeoText>
+              </View>
+            </View>
+          </View>
 
-      {/* Track Info */}
-      <View className="px-8 mt-12 w-full">
-        <NeoText variant="h2" numberOfLines={1} ellipsizeMode="tail" className="font-black tracking-tight text-3xl">
-          {currentTrack.title}
-        </NeoText>
-        <NeoText variant="body" numberOfLines={1} ellipsizeMode="tail" className="font-bold uppercase text-base opacity-70 mt-1">
-          {currentTrack.artist}
-        </NeoText>
-      </View>
+          {/* Track Info */}
+          <View className="px-8 mt-10 w-full">
+            <NeoText variant="h2" numberOfLines={1} ellipsizeMode="tail" className="font-black tracking-tight text-3xl">
+              {currentTrack.title}
+            </NeoText>
+            <NeoText variant="body" numberOfLines={1} ellipsizeMode="tail" className="font-bold uppercase text-base opacity-70 mt-1">
+              {currentTrack.artist}
+            </NeoText>
+          </View>
 
-      {/* Scrubber */}
-      <View className="px-8 mt-8">
-        <Pressable 
-          onPress={handleSeek} 
-          onLayout={(e) => setTrackWidth(e.nativeEvent.layout.width)}
-          className="h-3 bg-white border-4 border-black w-full relative"
-        >
-          <View 
-            className="absolute top-0 left-0 bottom-0 bg-neo-secondary border-r-4 border-black" 
-            style={{ width: `${progressPercent}%` }} 
-          />
-        </Pressable>
-        <View className="flex-row justify-between mt-3">
-          <NeoText variant="caption" className="font-bold text-sm">{formatTime(validPosition)}</NeoText>
-          <NeoText variant="caption" className="font-bold text-sm">-{formatTime(Math.max(0, validDuration - validPosition))}</NeoText>
-        </View>
-      </View>
+          {/* Scrubber */}
+          <View className="px-8 mt-6">
+            {renderScrubber()}
+          </View>
 
-      {/* Controls */}
-      <View className="flex-row items-center justify-center gap-4 mt-6 px-4">
-        <MechButton onPress={() => {}} className="w-12 h-12 bg-transparent" shadowClassName="hidden" hideBorder>
-          <Shuffle size={24} color="black" />
-        </MechButton>
-        
-        <MechButton onPress={playPrevious} className="w-14 h-14 bg-neo-bg">
-          <SkipBack size={24} color="black" fill="black" />
-        </MechButton>
-        
-        <MechButton onPress={handlePlayPause} className="w-[72px] h-[72px] bg-neo-accent">
-          {isPlaying ? <Pause size={32} color="black" fill="black" /> : <Play size={32} color="black" fill="black" />}
-        </MechButton>
-        
-        <MechButton onPress={playNext} className="w-14 h-14 bg-neo-bg">
-          <SkipForward size={24} color="black" fill="black" />
-        </MechButton>
-        
-        <MechButton onPress={() => {}} className="w-12 h-12 bg-transparent" shadowClassName="hidden" hideBorder>
-          <Repeat size={24} color="black" />
-        </MechButton>
-      </View>
+          {/* Controls */}
+          <View className="px-4">
+            {renderControls()}
+          </View>
 
-      {/* Queue */}
-      <View className="flex-1 mt-8 bg-white border-t-4 border-black px-6 pt-6">
-        <View className="border-b-4 border-black pb-2 mb-4 self-start">
-          <NeoText variant="caption" className="font-black uppercase tracking-widest">Up Next</NeoText>
-        </View>
-        <FlatList
-          data={upcomingQueue}
-          keyExtractor={(item, index) => item.id + '-' + index}
-          renderItem={({ item }) => (
-            <Pressable onPress={() => playTrack(item)}>
-                <NeoCard noShadow className="flex-row items-center p-2 mb-3 bg-neo-bg border-4 border-black">
-                <Image 
-                    source={item.coverArtUrl ? { uri: item.coverArtUrl } : require('../../assets/icon.png')} 
-                    className="w-11 h-11 border-4 border-black bg-neo-muted"
-                />
-                <View className="flex-1 ml-4 justify-center">
-                    <NeoText variant="body" numberOfLines={1} className="font-bold text-sm leading-tight uppercase tracking-tight">
-                    {item.title}
-                    </NeoText>
-                    <NeoText variant="caption" numberOfLines={1} className="text-xs opacity-70 font-bold uppercase tracking-wider mt-0.5">
-                    {item.artist}
-                    </NeoText>
-                </View>
-                </NeoCard>
-            </Pressable>
-          )}
-          showsVerticalScrollIndicator={false}
-        />
-      </View>
+          {/* Queue */}
+          <View className="mt-8 bg-white border-t-4 border-black px-6 pt-6 min-h-[300px]">
+            <View className="border-b-4 border-black pb-2 mb-4 self-start">
+              <NeoText variant="caption" className="font-black uppercase tracking-widest">Up Next</NeoText>
+            </View>
+            {renderQueueList()}
+          </View>
+        </ScrollView>
+      )}
     </SafeAreaView>
   );
 }

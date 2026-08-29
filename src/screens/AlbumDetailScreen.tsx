@@ -11,6 +11,7 @@ import {
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { ChevronLeft, Play, Shuffle, MoreHorizontal, Music2 } from 'lucide-react-native';
 import subsonic from '../api/subsonic';
+import { useResponsive } from '../hooks/useResponsive';
 import { NeoText, NeoButton, NeoCard } from '../components/ui';
 import { usePlayerStore, Track } from '../store/playerStore';
 import { TrackRow } from '../components';
@@ -36,6 +37,7 @@ export default function AlbumDetailScreen() {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
   const albumId = route.params?.albumId;
+  const { containerClass, isDesktop } = useResponsive();
 
   const [album, setAlbum] = useState<Album | null>(null);
   const [songs, setSongs] = useState<Song[]>([]);
@@ -146,7 +148,7 @@ export default function AlbumDetailScreen() {
           <NeoButton variant="ghost" icon={<ChevronLeft color="black" size={32} />} onPress={() => navigation.goBack()} />
         </View>
         
-        <View className="w-[55%] aspect-square border-4 border-black -rotate-1 shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] bg-neo-muted mb-8 relative">
+        <View className="w-48 sm:w-60 aspect-square border-4 border-black -rotate-1 shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] bg-neo-muted mb-8 relative">
            {album.coverArt ? (
              <Image source={{ uri: subsonic.getCoverArtUrl(album.coverArt) }} className="w-full h-full" />
            ) : (
@@ -174,7 +176,7 @@ export default function AlbumDetailScreen() {
           <NeoText variant="caption" className="font-bold text-xs">{formatDuration(totalSeconds)}</NeoText>
         </View>
 
-        <View className="flex-row items-center justify-center gap-3 mt-8 w-full px-6">
+        <View className="flex-row items-center justify-center gap-3 mt-8 w-full max-w-md px-6">
           <NeoButton 
             label="PLAY ALL" 
             variant="primary" 
@@ -211,20 +213,23 @@ export default function AlbumDetailScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-neo-bg">
-      <FlatList
-        data={songs}
-        keyExtractor={(item) => item.id}
-        renderItem={renderItem}
-        ListHeaderComponent={renderHeader}
-        ListFooterComponent={<View className="h-20" />} // padding bottom
-      />
-      
-      {error && !isLoading && (
-        <View className="absolute bottom-10 left-4 right-4 bg-neo-accent border-4 border-black p-4 items-center shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-          <NeoText variant="body" className="font-bold text-center mb-4">{error}</NeoText>
-          <NeoButton label="RETRY" onPress={loadData} />
-        </View>
-      )}
+      <View className={`flex-1 ${containerClass}`}>
+        <FlatList
+          data={songs}
+          keyExtractor={(item) => item.id}
+          renderItem={renderItem}
+          ListHeaderComponent={renderHeader}
+          ListFooterComponent={<View className="h-20" />} // padding bottom
+          contentContainerStyle={{ paddingHorizontal: isDesktop ? 16 : 0 }}
+        />
+        
+        {error && !isLoading && (
+          <View className="absolute bottom-10 left-4 right-4 bg-neo-accent border-4 border-black p-4 items-center shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+            <NeoText variant="body" className="font-bold text-center mb-4">{error}</NeoText>
+            <NeoButton label="RETRY" onPress={loadData} />
+          </View>
+        )}
+      </View>
     </SafeAreaView>
   );
 }

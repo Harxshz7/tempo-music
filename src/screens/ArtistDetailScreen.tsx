@@ -10,6 +10,7 @@ import {
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { ChevronLeft, Play, Shuffle } from 'lucide-react-native';
 import subsonic from '../api/subsonic';
+import { useResponsive } from '../hooks/useResponsive';
 import { NeoText, NeoButton, NeoCard } from '../components/ui';
 import { usePlayerStore, Track } from '../store/playerStore';
 import AlbumGridItem from '../components/AlbumGridItem';
@@ -35,8 +36,7 @@ export default function ArtistDetailScreen() {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
   const artistId = route.params?.artistId;
-  const { width } = useWindowDimensions();
-  const numColumns = width > 768 ? 4 : width > 480 ? 3 : 2;
+  const { numColumns, containerClass, isDesktop } = useResponsive();
 
   const [artist, setArtist] = useState<Artist | null>(null);
   const [albums, setAlbums] = useState<Album[]>([]);
@@ -148,7 +148,7 @@ export default function ArtistDetailScreen() {
           <NeoButton variant="ghost" icon={<ChevronLeft color="black" size={32} />} onPress={() => navigation.goBack()} />
         </View>
         
-        <View className="w-[55%] aspect-square border-4 border-black -rotate-1 shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] bg-neo-muted mb-8 relative justify-center items-center overflow-hidden">
+        <View className="w-44 sm:w-56 aspect-square border-4 border-black -rotate-1 shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] bg-neo-muted mb-8 relative justify-center items-center overflow-hidden">
            {artist.artistImageUrl ? (
              <Image source={{ uri: artist.artistImageUrl }} className="w-full h-full" />
            ) : (
@@ -170,7 +170,7 @@ export default function ArtistDetailScreen() {
           )}
         </View>
 
-        <View className="flex-row items-center justify-center gap-3 mt-8 w-full px-6 mb-8">
+        <View className="flex-row items-center justify-center gap-3 mt-8 w-full max-w-md px-6 mb-8">
           <NeoButton 
             label="PLAY ALL" 
             variant="primary" 
@@ -211,23 +211,25 @@ export default function ArtistDetailScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-neo-bg">
-      <FlatList
-        data={albums}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item, index }) => <AlbumGridItem album={item} index={index} numColumns={numColumns} showArtistName={false} />}
-        numColumns={numColumns}
-        key={`artist-albums-${numColumns}`}
-        ListHeaderComponent={renderHeader}
-        ListEmptyComponent={renderEmpty}
-        contentContainerStyle={{ paddingHorizontal: 8, paddingBottom: 90 }}
-      />
-      
-      {error && !isLoading && (
-        <View className="absolute bottom-24 left-4 right-4 bg-neo-accent border-4 border-black p-4 items-center shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-          <NeoText variant="body" className="font-bold text-center mb-4">{error}</NeoText>
-          <NeoButton label="RETRY" onPress={loadData} />
-        </View>
-      )}
+      <View className={`flex-1 ${containerClass}`}>
+        <FlatList
+          data={albums}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item, index }) => <AlbumGridItem album={item} index={index} numColumns={numColumns} showArtistName={false} />}
+          numColumns={numColumns}
+          key={`artist-albums-${numColumns}`}
+          ListHeaderComponent={renderHeader}
+          ListEmptyComponent={renderEmpty}
+          contentContainerStyle={{ paddingHorizontal: isDesktop ? 16 : 8, paddingBottom: 90 }}
+        />
+        
+        {error && !isLoading && (
+          <View className="absolute bottom-24 left-4 right-4 bg-neo-accent border-4 border-black p-4 items-center shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+            <NeoText variant="body" className="font-bold text-center mb-4">{error}</NeoText>
+            <NeoButton label="RETRY" onPress={loadData} />
+          </View>
+        )}
+      </View>
     </SafeAreaView>
   );
 }

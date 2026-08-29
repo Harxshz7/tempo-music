@@ -13,6 +13,7 @@ import {
 import { Search, X } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
 import subsonic from '../api/subsonic';
+import { useResponsive } from '../hooks/useResponsive';
 import { NeoText, NeoInput, NeoButton } from '../components/ui';
 import { TrackRow, AlbumGridItem } from '../components';
 import { useDebounce } from '../hooks/useDebounce';
@@ -29,8 +30,7 @@ interface SearchState {
 
 export default function SearchScreen() {
   const navigation = useNavigation<any>();
-  const { width } = useWindowDimensions();
-  const numColumns = width > 768 ? 4 : width > 480 ? 3 : 2;
+  const { numColumns, containerClass, isDesktop, isTablet } = useResponsive();
 
   const [query, setQuery] = useState('');
   const debouncedQuery = useDebounce(query, 400);
@@ -151,13 +151,16 @@ export default function SearchScreen() {
     </View>
   );
 
+  const maxItemsShown = isDesktop ? 10 : isTablet ? 8 : 6;
+  const maxSongsShown = isDesktop ? 10 : 5;
+
   const renderAllTab = () => (
     <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
       {results.artists.length > 0 && (
         <View>
           {renderSectionHeader('ARTISTS', () => setActiveTab('ARTISTS'))}
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 8 }}>
-            {results.artists.slice(0, 6).map(renderArtistAvatar)}
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: isDesktop ? 24 : 16, paddingBottom: 8 }}>
+            {results.artists.slice(0, maxItemsShown).map(renderArtistAvatar)}
           </ScrollView>
         </View>
       )}
@@ -165,8 +168,8 @@ export default function SearchScreen() {
       {results.albums.length > 0 && (
         <View>
           {renderSectionHeader('ALBUMS', () => setActiveTab('ALBUMS'))}
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 8, paddingBottom: 12 }}>
-            {results.albums.slice(0, 6).map((album, idx) => (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: isDesktop ? 24 : 8, paddingBottom: 12 }}>
+            {results.albums.slice(0, maxItemsShown).map((album, idx) => (
               <View style={{ width: 140 }} key={album.id}>
                 <AlbumGridItem album={album} index={idx} numColumns={1} showArtistName={true} />
               </View>
@@ -178,13 +181,13 @@ export default function SearchScreen() {
       {results.songs.length > 0 && (
         <View>
           {renderSectionHeader('SONGS', () => setActiveTab('SONGS'))}
-          {results.songs.slice(0, 5).map((song, idx) => (
+          {results.songs.slice(0, maxSongsShown).map((song, idx) => (
             <TrackRow
               key={song.id}
               song={song}
               index={idx}
               isPlaying={currentTrack?.id === song.id}
-              onPress={() => handleSongPress(idx, results.songs.slice(0, 5))}
+              onPress={() => handleSongPress(idx, results.songs.slice(0, maxSongsShown))}
               onMenuPress={handleMenuPress}
             />
           ))}
@@ -199,7 +202,7 @@ export default function SearchScreen() {
       keyExtractor={(item) => item.id}
       numColumns={numColumns}
       key={`artists-${numColumns}`}
-      contentContainerStyle={{ paddingHorizontal: 8, paddingBottom: 100 }}
+      contentContainerStyle={{ paddingHorizontal: isDesktop ? 16 : 8, paddingBottom: 100 }}
       renderItem={({ item, index }) => {
         const rotation = index % 2 === 0 ? '-rotate-1' : 'rotate-1';
         const initial = item.name ? item.name.charAt(0).toUpperCase() : '?';
@@ -231,7 +234,7 @@ export default function SearchScreen() {
       keyExtractor={(item) => item.id}
       numColumns={numColumns}
       key={`albums-${numColumns}`}
-      contentContainerStyle={{ paddingHorizontal: 8, paddingBottom: 100 }}
+      contentContainerStyle={{ paddingHorizontal: isDesktop ? 16 : 8, paddingBottom: 100 }}
       renderItem={({ item, index }) => (
         <AlbumGridItem album={item} index={index} numColumns={numColumns} showArtistName={true} />
       )}
@@ -242,7 +245,7 @@ export default function SearchScreen() {
     <FlatList
       data={results.songs}
       keyExtractor={(item) => item.id}
-      contentContainerStyle={{ paddingBottom: 100 }}
+      contentContainerStyle={{ paddingBottom: 100, paddingHorizontal: isDesktop ? 16 : 0 }}
       renderItem={({ item, index }) => (
         <TrackRow
           song={item}
@@ -261,64 +264,66 @@ export default function SearchScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-neo-bg">
-      <View className="px-4 pt-6 pb-4">
-        <NeoInput
-          placeholder="SEARCH ARTISTS, ALBUMS, SONGS"
-          value={query}
-          onChangeText={setQuery}
-          autoFocus={Platform.OS === 'web'}
-          returnKeyType="search"
-          onSubmitEditing={() => {
-            if (query.trim().length >= 2) {
-              performSearch(query.trim());
+      <View className={`flex-1 ${containerClass}`}>
+        <View className="px-4 pt-6 pb-4">
+          <NeoInput
+            placeholder="SEARCH ARTISTS, ALBUMS, SONGS"
+            value={query}
+            onChangeText={setQuery}
+            autoFocus={Platform.OS === 'web'}
+            returnKeyType="search"
+            onSubmitEditing={() => {
+              if (query.trim().length >= 2) {
+                performSearch(query.trim());
+              }
+            }}
+            leftIcon={<Search color="black" size={24} />}
+            rightIcon={
+              query.length > 0 ? (
+                <Pressable onPress={() => setQuery('')} className="p-2">
+                  <X color="black" size={24} />
+                </Pressable>
+              ) : undefined
             }
-          }}
-          leftIcon={<Search color="black" size={24} />}
-          rightIcon={
-            query.length > 0 ? (
-              <Pressable onPress={() => setQuery('')} className="p-2">
-                <X color="black" size={24} />
-              </Pressable>
-            ) : undefined
-          }
-        />
-      </View>
+          />
+        </View>
 
-      {!isIdle && renderTabs()}
+        {!isIdle && renderTabs()}
 
-      <View className="flex-1 relative">
-        {isFetching && (
-          <View className="absolute inset-0 bg-neo-bg/50 z-10 items-center pt-20">
-            <View className="bg-white border-4 border-black p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-               <ActivityIndicator size="large" color="black" />
+        <View className="flex-1 relative">
+          {isFetching && (
+            <View className="absolute inset-0 bg-neo-bg/50 z-10 items-center pt-20">
+              <View className="bg-white border-4 border-black p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                <ActivityIndicator size="large" color="black" />
+              </View>
             </View>
-          </View>
-        )}
+          )}
 
-        {isIdle ? (
-          <View className="flex-1 items-center justify-center pb-32">
-            <Search color="black" size={80} opacity={0.2} />
-            <NeoText className="font-black uppercase text-xl mt-4 opacity-50 text-center px-8">
-              SEARCH YOUR LIBRARY
-            </NeoText>
-          </View>
-        ) : isNoResults ? (
-          <View className="flex-1 items-center justify-center pb-32">
-            <NeoText className="font-black uppercase text-2xl text-center px-4">
-              NO RESULTS FOR '{debouncedQuery}'
-            </NeoText>
-            <NeoText className="font-bold opacity-60 mt-2">
-              Try a different search
-            </NeoText>
-          </View>
-        ) : (
-          <>
-            {activeTab === 'ALL' && renderAllTab()}
-            {activeTab === 'ARTISTS' && renderArtistsTab()}
-            {activeTab === 'ALBUMS' && renderAlbumsTab()}
-            {activeTab === 'SONGS' && renderSongsTab()}
-          </>
-        )}
+          {isIdle ? (
+            <View className="flex-1 items-center justify-center pb-32">
+              <Search color="black" size={80} opacity={0.2} />
+              <NeoText className="font-black uppercase text-xl mt-4 opacity-50 text-center px-8">
+                SEARCH YOUR LIBRARY
+              </NeoText>
+            </View>
+          ) : isNoResults ? (
+            <View className="flex-1 items-center justify-center pb-32">
+              <NeoText className="font-black uppercase text-2xl text-center px-4">
+                NO RESULTS FOR '{debouncedQuery}'
+              </NeoText>
+              <NeoText className="font-bold opacity-60 mt-2">
+                Try a different search
+              </NeoText>
+            </View>
+          ) : (
+            <>
+              {activeTab === 'ALL' && renderAllTab()}
+              {activeTab === 'ARTISTS' && renderArtistsTab()}
+              {activeTab === 'ALBUMS' && renderAlbumsTab()}
+              {activeTab === 'SONGS' && renderSongsTab()}
+            </>
+          )}
+        </View>
       </View>
     </SafeAreaView>
   );
