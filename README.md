@@ -1,119 +1,67 @@
-# Tempo Music
+# Tempo
 
-A free, open-source hybrid music app for iOS, Android, and Web, built with React Native + Expo. Stream your own library via any Subsonic/Navidrome-compatible server.
+🎵 Your music, your server — an open-source Subsonic/Navidrome client for iOS, Android & Web.
+
+<!-- [screenshot/banner image placeholder — add after screenshots are taken] -->
+
+## About
+
+Tempo is a free, open-source hybrid music app built with React Native + Expo. It streams your own music library through any Subsonic-compatible server (Navidrome, Airsonic, Ampache, Gonic, and others) — no ads, no subscriptions, no lock-in. Your music stays on your server; Tempo is just the player.
 
 ## Features
 
-- Stream music from Subsonic/Navidrome-compatible servers
-- Browse artists, albums, and playlists
-- Full-text search across your library
-- Token-based authentication (md5 password + salt)
-- Cross-platform: iOS, Android, and Web
+- Cross-platform: one codebase for iOS, Android, and Web
+- Full library browsing: albums, artists, playlists
+- Search across your entire library
+- Background playback with lock-screen/notification controls (native)
+- Persistent queue — resume where you left off after restart
+- Distinctive Neo-brutalist UI — bold, high-contrast, unapologetically visible
+- 100% open source, MIT licensed
 
-## Tech Stack
+## Screenshots
 
-- **React Native + Expo** (SDK 57)
-- **TypeScript**
-- **Zustand** — lightweight state management
-- **React Navigation** — native stack + bottom tabs
-- **expo-av** — audio playback
-- **Axios** — HTTP client
-- **CryptoJS** — Subsonic token/salt authentication
-- **AsyncStorage** — persist server credentials
+<!-- Add 3-4 screenshots here once available: Library, Player, Search, Login — arrange in a table or side-by-side via HTML img tags for README -->
+> _Screenshots coming soon!_
+
+## Requirements
+
+- A running Subsonic-compatible music server (recommended: [Navidrome](https://www.navidrome.org/))
+- Node.js 18+ and npm
+- Expo CLI (`npx expo`)
+- For native builds: Expo Go (quick testing) or a custom dev client (for background audio — see Known Limitations)
 
 ## Getting Started
 
-### Prerequisites
-
-- Node.js 18+
-- npm or yarn
-- A Subsonic-compatible server (Navidrome, Airsonic, etc.)
-
-### Install
-
 ```bash
+git clone https://github.com/Harxshz7/tempo-music.git
+cd tempo-music
 npm install
+npx expo start
 ```
 
-### Demo Login
+Press `w` for web, `a` for Android emulator, `i` for iOS simulator, or scan the QR code with Expo Go on your phone.
 
-If you don't have your own server yet, you can test the app using the public Navidrome demo:
-- **Server URL:** `https://demo.navidrome.org`
-- **Username:** `demo`
-- **Password:** `demo`
+On first launch, enter your Subsonic/Navidrome server URL, username, and password to connect.
 
-### Start Development Server
+## Tech Stack
 
-We recommend starting the bundler and clearing the cache to avoid issues:
-```bash
-npx expo start -c
-```
+- React Native + Expo (SDK 57)
+- TypeScript
+- NativeWind (Tailwind CSS for React Native)
+- Zustand (state management)
+- expo-av (audio playback)
+- Subsonic REST API (v1.16.1) for server communication
 
-### Run (Web)
+## Known Limitations
 
-Press `w` in the terminal after starting the server, or run:
-```bash
-npm run web
-```
+- Full background audio and lock-screen controls require a custom dev client (`npx expo run:android` / `npx expo run:ios`) — not available in Expo Go
+- iOS lock-screen scrubbing/metadata is limited pending a possible future migration to `expo-audio`
+- Web playback requires your Subsonic server to send proper CORS headers — see your server's reverse-proxy config if album art or streaming fails only on web
 
-### Run (Native)
+## Contributing
 
-Press `i` (iOS) or `a` (Android) in the terminal after starting the server, or run:
-```bash
-npm run ios
-# or
-npm run android
-```
-
-### Web Setup & Server CORS Note
-
-When running Tempo in a web browser (`npm run web`), modern browsers enforce strict Cross-Origin Resource Sharing (CORS) rules on audio streams and cover art images. Native iOS and Android apps bypass browser CORS restrictions, but web clients require your Subsonic/Navidrome server to send proper CORS headers.
-
-If cover art or audio fails to load on web:
-- **Navidrome**: Set `ND_ENABLECORS=true` in your environment or `EnableCORS = true` in `navidrome.toml`.
-- **Reverse Proxy (Nginx/Caddy/Traefik)**: Ensure headers such as `Access-Control-Allow-Origin: *` and `Access-Control-Allow-Methods: GET, POST, OPTIONS` are forwarded.
-
-## Project Structure
-
-```
-src/
-├── api/          # Subsonic REST API client
-├── screens/      # App screens (Login, Library, Search, Playlists, Settings)
-├── components/   # Reusable UI components
-├── store/        # Zustand state management
-├── hooks/        # Custom React hooks
-├── utils/        # Utility functions
-└── types/        # TypeScript type definitions
-```
-
-## API
-
-The app communicates with any server implementing the [Subsonic REST API](http://www.subsonic.org/pages/api.jsp) v1.16.1:
-
-- **Authentication**: Token-based (`md5(password + salt)`)
-- **Transport**: HTTP(S) with JSON responses
-- **Endpoints**: `ping`, `getArtists`, `getArtist`, `getAlbum`, `getAlbumList2`, `search3`, `getPlaylists`, `getPlaylist`, `getCoverArt`, `stream`
+Contributions are welcome! Please open an issue to discuss significant changes before submitting a PR. Keep new UI consistent with the existing Neo-brutalism design system (see `/src/components/ui/` for primitives).
 
 ## License
 
-MIT License
-
-Copyright (c) 2026 Tempo Music Contributors
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+MIT — see [LICENSE](./LICENSE) for details.
