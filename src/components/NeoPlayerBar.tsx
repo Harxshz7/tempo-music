@@ -7,6 +7,8 @@ import { useAudioPlayer } from '../hooks/useAudioPlayer';
 import { NeoText } from './ui/NeoText';
 import { useNavigation } from '@react-navigation/native';
 
+import { triggerHaptic } from '../utils/haptics';
+
 // Animated Pressable for mechanical button feel
 const MechButton = ({ children, onPress, className, iconColor = "#000" }: any) => {
   const isPressed = useSharedValue(false);
@@ -17,7 +19,6 @@ const MechButton = ({ children, onPress, className, iconColor = "#000" }: any) =
         { translateX: withTiming(isPressed.value ? 2 : 0, { duration: 100, easing: Easing.linear }) },
         { translateY: withTiming(isPressed.value ? 2 : 0, { duration: 100, easing: Easing.linear }) }
       ],
-      // simulate shadow removal by translating over it
     };
   });
 
@@ -36,10 +37,16 @@ const MechButton = ({ children, onPress, className, iconColor = "#000" }: any) =
       <Animated.View className={`absolute top-[3px] left-[3px] bg-black ${className}`} style={shadowStyle} />
       <Animated.View style={animatedStyle}>
         <Pressable
-          onPressIn={() => isPressed.value = true}
+          onPressIn={() => {
+            isPressed.value = true;
+          }}
           onPressOut={() => isPressed.value = false}
-          onPress={onPress}
-          className={`items-center justify-center border-[3px] border-black ${className}`}
+          onPress={() => {
+            triggerHaptic();
+            onPress?.();
+          }}
+          className={`items-center justify-center border-[3px] border-black min-w-[44px] min-h-[44px] ${className}`}
+          hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
         >
           {React.cloneElement(children, { color: iconColor })}
         </Pressable>
@@ -47,6 +54,7 @@ const MechButton = ({ children, onPress, className, iconColor = "#000" }: any) =
     </View>
   );
 };
+
 
 export function NeoPlayerBar() {
   const navigation = useNavigation<any>();

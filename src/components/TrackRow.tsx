@@ -5,6 +5,7 @@ import { NeoText } from './ui';
 import { Track } from '../store/playerStore';
 import type { Song } from '../types';
 import subsonic from '../api/subsonic';
+import { triggerHaptic } from '../utils/haptics';
 
 interface TrackRowProps {
   song: Song;
@@ -15,6 +16,8 @@ interface TrackRowProps {
   albumArtUrl?: string; // used for mapping if coverArt isn't on song
   fallbackArtist?: string; // used if song doesn't have artist
 }
+
+export const TRACK_ROW_HEIGHT = 60;
 
 export default function TrackRow({
   song,
@@ -44,10 +47,15 @@ export default function TrackRow({
     };
   };
 
+  const handlePress = () => {
+    triggerHaptic();
+    onPress();
+  };
+
   return (
     <Pressable 
-      className={`flex-row items-center px-4 py-3 border-b-2 border-black ${isPlaying ? 'bg-neo-secondary/30' : ''}`}
-      onPress={onPress}
+      className={`flex-row items-center px-4 py-3 min-h-[56px] border-b-2 border-black active:opacity-70 ${isPlaying ? 'bg-neo-secondary/30' : 'bg-transparent active:bg-black/5'}`}
+      onPress={handlePress}
     >
       <View className="w-8 items-center justify-center mr-2">
         {isPlaying ? (
@@ -69,9 +77,17 @@ export default function TrackRow({
       <NeoText variant="caption" className="font-bold text-xs opacity-60 mr-4">
         {formatDuration(song.duration)}
       </NeoText>
-      <Pressable onPress={() => onMenuPress(mapToTrack())} className="p-2">
+      <Pressable 
+        onPress={() => {
+          triggerHaptic();
+          onMenuPress(mapToTrack());
+        }} 
+        className="w-11 h-11 items-center justify-center -mr-2 active:opacity-60"
+        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+      >
         <MoreHorizontal color="black" size={20} />
       </Pressable>
     </Pressable>
   );
 }
+

@@ -17,8 +17,9 @@ import { useNavigation } from '@react-navigation/native';
 import subsonic from '../api/subsonic';
 import { useResponsive } from '../hooks/useResponsive';
 import type { Artist, Album, Playlist, ArtistIndex } from '../types';
-import { NeoText, NeoCard, NeoButton } from '../components/ui';
+import { NeoText, NeoCard, NeoButton, NeoSkeleton } from '../components/ui';
 import AlbumGridItem from '../components/AlbumGridItem';
+import { triggerHaptic } from '../utils/haptics';
 
 type Tab = 'Albums' | 'Artists' | 'Playlists';
 
@@ -35,21 +36,6 @@ const HalftoneBackground = () => (
   </View>
 );
 
-const SkeletonPulse = () => {
-  const anim = useRef(new Animated.Value(0.5)).current;
-  useEffect(() => {
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(anim, { toValue: 1, duration: 800, useNativeDriver: true }),
-        Animated.timing(anim, { toValue: 0.5, duration: 800, useNativeDriver: true }),
-      ])
-    ).start();
-  }, [anim]);
-
-  return (
-    <Animated.View style={{ opacity: anim }} className="bg-neo-muted w-full h-full" />
-  );
-};
 
 export default function LibraryScreen() {
   const navigation = useNavigation<any>();
@@ -181,7 +167,7 @@ export default function LibraryScreen() {
         <View key={key} style={{ width: `${100 / numColumns}%` }} className="p-2">
           <View className="bg-white border-4 border-black p-2 aspect-square">
             <View className="w-full h-full border-4 border-black overflow-hidden">
-               <SkeletonPulse />
+               <NeoSkeleton />
             </View>
           </View>
         </View>
@@ -217,8 +203,11 @@ export default function LibraryScreen() {
             {(['Albums', 'Artists', 'Playlists'] as Tab[]).map((tab, idx) => (
               <Pressable
                 key={tab}
-                onPress={() => setActiveTab(tab)}
-                className={`flex-1 py-3 items-center justify-center ${activeTab === tab ? 'bg-neo-secondary' : 'bg-white'} ${idx !== 0 ? 'border-l-4 border-black' : ''}`}
+                onPress={() => {
+                  triggerHaptic();
+                  setActiveTab(tab);
+                }}
+                className={`flex-1 py-3 items-center justify-center min-h-[44px] ${activeTab === tab ? 'bg-neo-secondary' : 'bg-white'} ${idx !== 0 ? 'border-l-4 border-black' : ''}`}
               >
                 <NeoText variant="caption" className={`font-black uppercase tracking-widest ${activeTab === tab ? 'text-white' : 'text-black'}`}>
                   {tab}
@@ -231,7 +220,7 @@ export default function LibraryScreen() {
         {/* Error State */}
         {error && !isLoading && (
           <View className="px-4 mb-4">
-            <View className="bg-neo-accent border-4 border-black p-4 items-center">
+            <View className="bg-neo-accent border-4 border-black p-4 items-center shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
               <NeoText variant="body" className="font-bold text-center mb-4">{error}</NeoText>
               <NeoButton label="RETRY" onPress={() => loadData(true)} />
             </View>
@@ -258,11 +247,15 @@ export default function LibraryScreen() {
         {/* Lists */}
         {!isLoading && activeTab === 'Albums' && albums.length > 0 && (
           <FlatList
-            key={`albums-${numColumns}`} // Force re-render if columns change
+            key={`albums-${numColumns}`}
             data={albums}
             numColumns={numColumns}
             keyExtractor={(item) => item.id}
             renderItem={renderAlbum}
+            removeClippedSubviews={Platform.OS !== 'web'}
+            initialNumToRender={12}
+            maxToRenderPerBatch={12}
+            windowSize={7}
             contentContainerStyle={{ paddingHorizontal: isDesktop ? 16 : 8, paddingBottom: 100 }}
             onEndReached={handleEndReached}
             onEndReachedThreshold={0.5}
@@ -275,6 +268,7 @@ export default function LibraryScreen() {
             sections={artistsSections}
             keyExtractor={(item) => item.id}
             renderItem={renderArtist}
+            removeClippedSubviews={Platform.OS !== 'web'}
             renderSectionHeader={({ section: { title } }) => (
               <View className="px-4 py-2 bg-neo-bg mb-2">
                 <View className="w-8 h-8 bg-neo-secondary border-2 border-black items-center justify-center shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] -rotate-3">
@@ -293,6 +287,7 @@ export default function LibraryScreen() {
             data={playlists}
             keyExtractor={(item) => item.id}
             renderItem={renderPlaylist}
+            removeClippedSubviews={Platform.OS !== 'web'}
             contentContainerStyle={{ paddingTop: 8, paddingBottom: 100 }}
             refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={() => loadData(true)} tintColor="black" />}
           />
@@ -301,3 +296,4 @@ export default function LibraryScreen() {
     </SafeAreaView>
   );
 }
+

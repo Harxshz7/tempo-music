@@ -4,6 +4,7 @@ import { useNavigation } from '@react-navigation/native';
 import { NeoText } from './ui';
 import subsonic from '../api/subsonic';
 import type { Album } from '../types';
+import { triggerHaptic } from '../utils/haptics';
 
 interface AlbumGridItemProps {
   album: Album;
@@ -18,7 +19,13 @@ export default function AlbumGridItem({ album, index, numColumns, showArtistName
   
   return (
     <View style={{ width: `${100 / numColumns}%` }} className="p-2">
-      <Pressable onPress={() => navigation.navigate('AlbumDetail', { albumId: album.id })}>
+      <Pressable 
+        onPress={() => {
+          triggerHaptic();
+          navigation.navigate('AlbumDetail', { albumId: album.id });
+        }}
+        className="active:opacity-80 active:scale-[0.98] transition-transform"
+      >
         <View className={`bg-white border-4 border-black p-2 ${rotation} shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]`}>
           <View className="aspect-square bg-neo-muted border-4 border-black mb-2 relative overflow-hidden">
              {album.coverArt ? (
@@ -46,3 +53,4 @@ export default function AlbumGridItem({ album, index, numColumns, showArtistName
     </View>
   );
 }
+

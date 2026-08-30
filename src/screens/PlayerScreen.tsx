@@ -10,6 +10,8 @@ import { useAudioPlayer } from '../hooks/useAudioPlayer';
 import { useResponsive } from '../hooks/useResponsive';
 import { NeoText, HardShadow, NeoCard } from '../components/ui';
 
+import { triggerHaptic } from '../utils/haptics';
+
 const MechButton = ({ children, onPress, className, shadowClassName = "bg-black w-full h-full", hideBorder = false }: any) => {
   const isPressed = useSharedValue(false);
 
@@ -39,8 +41,12 @@ const MechButton = ({ children, onPress, className, shadowClassName = "bg-black 
         <Pressable
           onPressIn={() => isPressed.value = true}
           onPressOut={() => isPressed.value = false}
-          onPress={onPress}
-          className={`items-center justify-center ${hideBorder ? '' : 'border-4 border-black'} ${className}`}
+          onPress={() => {
+            triggerHaptic();
+            onPress?.();
+          }}
+          className={`items-center justify-center min-w-[44px] min-h-[44px] ${hideBorder ? '' : 'border-4 border-black'} ${className}`}
+          hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
         >
           {children}
         </Pressable>
@@ -48,6 +54,7 @@ const MechButton = ({ children, onPress, className, shadowClassName = "bg-black 
     </View>
   );
 };
+
 
 const HalftoneBackground = () => (
   <View className="absolute inset-0 opacity-10" pointerEvents="none">

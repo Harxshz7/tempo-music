@@ -12,26 +12,13 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { ChevronLeft, Play, Shuffle, MoreHorizontal, Music2 } from 'lucide-react-native';
 import subsonic from '../api/subsonic';
 import { useResponsive } from '../hooks/useResponsive';
-import { NeoText, NeoButton, NeoCard } from '../components/ui';
+import { NeoText, NeoButton, NeoCard, NeoSkeleton } from '../components/ui';
 import { usePlayerStore, Track } from '../store/playerStore';
 import { TrackRow } from '../components';
+import { TRACK_ROW_HEIGHT } from '../components/TrackRow';
 import type { Album, Song } from '../types';
+import { triggerHaptic } from '../utils/haptics';
 
-const SkeletonPulse = () => {
-  const anim = useRef(new Animated.Value(0.5)).current;
-  useEffect(() => {
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(anim, { toValue: 1, duration: 800, useNativeDriver: true }),
-        Animated.timing(anim, { toValue: 0.5, duration: 800, useNativeDriver: true }),
-      ])
-    ).start();
-  }, [anim]);
-
-  return (
-    <Animated.View style={{ opacity: anim }} className="bg-neo-muted w-full h-full" />
-  );
-};
 
 export default function AlbumDetailScreen() {
   const navigation = useNavigation<any>();
