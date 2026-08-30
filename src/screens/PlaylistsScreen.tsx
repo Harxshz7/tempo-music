@@ -103,30 +103,33 @@ export default function PlaylistsScreen() {
           </View>
         )}
 
-        <FlatList
-          data={playlists}
-          keyExtractor={(item) => item.id}
-          renderItem={renderItem}
-          contentContainerStyle={{ paddingBottom: 100 }}
-          refreshControl={
-            <RefreshControl
-              refreshing={isRefreshing}
-              onRefresh={() => loadPlaylists(true)}
-              tintColor="black"
-            />
-          }
-          ListEmptyComponent={
-            !isLoading && !error ? (
-              <View className="flex-1 items-center justify-center px-6 py-20">
-                <NeoCard className="items-center p-8 bg-white border-4 border-black rotate-1">
-                  <NeoText variant="h3" className="font-black uppercase mb-2 text-center">NO PLAYLISTS FOUND</NeoText>
-                  <NeoText variant="caption" className="font-bold opacity-70 text-center">Create playlists in Navidrome</NeoText>
-                </NeoCard>
-              </View>
-            ) : null
-          }
-        />
+        {isLoading && playlists.length === 0 ? renderSkeletons() : (
+          <FlatList
+            data={playlists}
+            keyExtractor={(item) => item.id}
+            renderItem={renderItem}
+            contentContainerStyle={{ paddingBottom: 100 }}
+            refreshControl={
+              <RefreshControl
+                refreshing={isRefreshing}
+                onRefresh={() => loadPlaylists(true)}
+                tintColor="black"
+              />
+            }
+            ListEmptyComponent={
+              !isLoading && !error ? (
+                <View className="flex-1 items-center justify-center px-6 py-20">
+                  <NeoCard className="items-center p-8 bg-white border-4 border-black rotate-1">
+                    <NeoText variant="h3" className="font-black uppercase mb-2 text-center">NO PLAYLISTS FOUND</NeoText>
+                    <NeoText variant="caption" className="font-bold opacity-70 text-center">Create playlists in Navidrome</NeoText>
+                  </NeoCard>
+                </View>
+              ) : null
+            }
+          />
+        )}
       </View>
     </SafeAreaView>
   );
 }
+

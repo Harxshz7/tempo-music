@@ -19,6 +19,8 @@ import { TrackRow, AlbumGridItem } from '../components';
 import { useDebounce } from '../hooks/useDebounce';
 import { usePlayerStore, Track } from '../store/playerStore';
 import type { Artist, Album, Song } from '../types';
+import { triggerHaptic } from '../utils/haptics';
+
 
 type SearchTab = 'ALL' | 'ARTISTS' | 'ALBUMS' | 'SONGS';
 
@@ -105,8 +107,11 @@ export default function SearchScreen() {
           {tabs.map((tab, idx) => (
             <Pressable
               key={tab.key}
-              onPress={() => setActiveTab(tab.key)}
-              className={`flex-1 py-3 items-center justify-center ${activeTab === tab.key ? 'bg-neo-secondary' : 'bg-white'} ${idx !== 0 ? 'border-l-4 border-black' : ''}`}
+              onPress={() => {
+                triggerHaptic();
+                setActiveTab(tab.key);
+              }}
+              className={`flex-1 py-3 items-center justify-center min-h-[44px] ${activeTab === tab.key ? 'bg-neo-secondary' : 'bg-white'} ${idx !== 0 ? 'border-l-4 border-black' : ''}`}
             >
               <NeoText variant="caption" className={`font-black uppercase tracking-widest text-[10px] sm:text-xs ${activeTab === tab.key ? 'text-white' : 'text-black'}`}>
                 {tab.label}
@@ -123,8 +128,11 @@ export default function SearchScreen() {
     return (
       <Pressable
         key={artist.id}
-        onPress={() => navigation.navigate('ArtistDetail', { artistId: artist.id })}
-        className="w-16 mr-4 items-center"
+        onPress={() => {
+          triggerHaptic();
+          navigation.navigate('ArtistDetail', { artistId: artist.id });
+        }}
+        className="w-16 mr-4 items-center active:opacity-75"
       >
         <View className="w-16 h-16 border-2 border-black -rotate-1 bg-neo-muted overflow-hidden items-center justify-center shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
           {artist.artistImageUrl ? (
@@ -139,6 +147,7 @@ export default function SearchScreen() {
       </Pressable>
     );
   };
+
 
   const renderSectionHeader = (title: string, onSeeAll: () => void) => (
     <View className="flex-row justify-between items-end px-4 mb-3 mt-6">
@@ -280,11 +289,19 @@ export default function SearchScreen() {
             leftIcon={<Search color="black" size={24} />}
             rightIcon={
               query.length > 0 ? (
-                <Pressable onPress={() => setQuery('')} className="p-2">
+                <Pressable 
+                  onPress={() => {
+                    triggerHaptic();
+                    setQuery('');
+                  }} 
+                  className="w-11 h-11 items-center justify-center -mr-2"
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                >
                   <X color="black" size={24} />
                 </Pressable>
               ) : undefined
             }
+
           />
         </View>
 

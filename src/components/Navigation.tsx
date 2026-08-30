@@ -79,7 +79,13 @@ export default function Navigation() {
   return (
     <NavigationContainer>
       <View className="flex-1 relative bg-neo-bg">
-        <Stack.Navigator screenOptions={{ headerShown: false }}>
+        <Stack.Navigator 
+          screenOptions={{ 
+            headerShown: false,
+            animation: 'fade',
+            animationDuration: 220,
+          }}
+        >
           {isAuthenticated ? (
             <>
               <Stack.Screen 
@@ -89,12 +95,21 @@ export default function Navigation() {
               <Stack.Screen name="AlbumDetail" component={AlbumDetailScreen} />
               <Stack.Screen name="ArtistDetail" component={ArtistDetailScreen} />
               <Stack.Screen name="PlaylistDetail" component={PlaylistDetailScreen} />
-              <Stack.Screen name="Player" component={PlayerScreen} options={{ presentation: 'modal' }} />
+              <Stack.Screen 
+                name="Player" 
+                component={PlayerScreen} 
+                options={{ 
+                  presentation: 'modal',
+                  animation: 'slide_from_bottom',
+                  animationDuration: 250,
+                }} 
+              />
             </>
           ) : (
             <Stack.Screen name="Login" component={LoginScreen} />
           )}
         </Stack.Navigator>
+
         
         {/* Render player bar. On desktop pinned to bottom-0, on mobile pinned above the 50px tab bar. */}
         {isAuthenticated && (
