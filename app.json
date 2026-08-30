@@ -12,6 +12,8 @@
       "resizeMode": "contain"
     },
     "ios": {
+      "bundleIdentifier": "com.harsha.tempo",
+      "buildNumber": "1.0.0",
       "supportsTablet": true,
       "infoPlist": {
         "UIBackgroundModes": [
@@ -20,6 +22,8 @@
       }
     },
     "android": {
+      "package": "com.harsha.tempo",
+      "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon-foreground.png",
         "backgroundColor": "#FFFDF5"
