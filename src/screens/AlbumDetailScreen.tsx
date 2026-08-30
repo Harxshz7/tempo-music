@@ -108,13 +108,22 @@ export default function AlbumDetailScreen() {
       return (
         <View className="items-center px-4 pt-4 pb-8">
           <View className="self-start mb-6">
-            <NeoButton variant="ghost" icon={<ChevronLeft color="black" size={32} />} onPress={() => navigation.goBack()} />
+            <Pressable 
+              onPress={() => {
+                triggerHaptic();
+                navigation.goBack();
+              }}
+              className="w-11 h-11 items-center justify-center -ml-2"
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <ChevronLeft color="black" size={32} />
+            </Pressable>
           </View>
           <View className="w-48 h-48 border-4 border-black -rotate-1 shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] bg-neo-muted overflow-hidden">
-             <SkeletonPulse />
+             <NeoSkeleton />
           </View>
-          <View className="w-3/4 h-8 mt-8 mb-2 border-4 border-black overflow-hidden"><SkeletonPulse /></View>
-          <View className="w-1/2 h-6 border-4 border-black overflow-hidden"><SkeletonPulse /></View>
+          <View className="w-3/4 h-8 mt-8 mb-2 border-4 border-black overflow-hidden"><NeoSkeleton /></View>
+          <View className="w-1/2 h-6 border-4 border-black overflow-hidden"><NeoSkeleton /></View>
         </View>
       );
     }
@@ -122,7 +131,16 @@ export default function AlbumDetailScreen() {
     if (error || !album) {
       return (
         <View className="px-4 pt-4">
-           <NeoButton variant="ghost" icon={<ChevronLeft color="black" size={32} />} onPress={() => navigation.goBack()} />
+           <Pressable 
+             onPress={() => {
+               triggerHaptic();
+               navigation.goBack();
+             }}
+             className="w-11 h-11 items-center justify-center -ml-2"
+             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+           >
+             <ChevronLeft color="black" size={32} />
+           </Pressable>
         </View>
       );
     }
@@ -132,7 +150,16 @@ export default function AlbumDetailScreen() {
     return (
       <View className="items-center px-4 pt-4 pb-8">
         <View className="self-start w-full">
-          <NeoButton variant="ghost" icon={<ChevronLeft color="black" size={32} />} onPress={() => navigation.goBack()} />
+          <Pressable 
+            onPress={() => {
+              triggerHaptic();
+              navigation.goBack();
+            }}
+            className="w-11 h-11 items-center justify-center -ml-2"
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <ChevronLeft color="black" size={32} />
+          </Pressable>
         </View>
         
         <View className="w-48 sm:w-60 aspect-square border-4 border-black -rotate-1 shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] bg-neo-muted mb-8 relative">
@@ -206,7 +233,7 @@ export default function AlbumDetailScreen() {
           keyExtractor={(item) => item.id}
           renderItem={renderItem}
           ListHeaderComponent={renderHeader}
-          ListFooterComponent={<View className="h-20" />} // padding bottom
+          ListFooterComponent={<View className="h-20" />}
           contentContainerStyle={{ paddingHorizontal: isDesktop ? 16 : 0 }}
         />
         
@@ -220,3 +247,4 @@ export default function AlbumDetailScreen() {
     </SafeAreaView>
   );
 }
+

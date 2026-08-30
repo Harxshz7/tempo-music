@@ -13,26 +13,12 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { ChevronLeft, Play, Shuffle, MoreHorizontal, ListMusic } from 'lucide-react-native';
 import subsonic from '../api/subsonic';
 import { useResponsive } from '../hooks/useResponsive';
-import { NeoText, NeoButton, NeoCard, NeoBadge, NeoInput } from '../components/ui';
+import { NeoText, NeoButton, NeoCard, NeoBadge, NeoInput, NeoSkeleton } from '../components/ui';
 import { usePlayerStore, Track } from '../store/playerStore';
 import { TrackRow } from '../components';
 import type { Playlist, Song } from '../types';
+import { triggerHaptic } from '../utils/haptics';
 
-const SkeletonPulse = () => {
-  const anim = useRef(new Animated.Value(0.5)).current;
-  useEffect(() => {
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(anim, { toValue: 1, duration: 800, useNativeDriver: true }),
-        Animated.timing(anim, { toValue: 0.5, duration: 800, useNativeDriver: true }),
-      ])
-    ).start();
-  }, [anim]);
-
-  return (
-    <Animated.View style={{ opacity: anim }} className="bg-neo-muted w-full h-full" />
-  );
-};
 
 export default function PlaylistDetailScreen() {
   const navigation = useNavigation<any>();
@@ -228,13 +214,22 @@ export default function PlaylistDetailScreen() {
       return (
         <View className="items-center px-4 pt-4 pb-8">
           <View className="self-start mb-6 w-full flex-row">
-            <NeoButton variant="ghost" icon={<ChevronLeft color="black" size={32} />} onPress={() => navigation.goBack()} />
+            <Pressable 
+              onPress={() => {
+                triggerHaptic();
+                navigation.goBack();
+              }}
+              className="w-11 h-11 items-center justify-center -ml-2"
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <ChevronLeft color="black" size={32} />
+            </Pressable>
           </View>
           <View className="w-[55%] aspect-square border-4 border-black -rotate-1 shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] bg-neo-muted overflow-hidden">
-             <SkeletonPulse />
+             <NeoSkeleton />
           </View>
-          <View className="w-3/4 h-8 mt-8 mb-2 border-4 border-black overflow-hidden"><SkeletonPulse /></View>
-          <View className="w-1/2 h-6 border-4 border-black overflow-hidden"><SkeletonPulse /></View>
+          <View className="w-3/4 h-8 mt-8 mb-2 border-4 border-black overflow-hidden"><NeoSkeleton /></View>
+          <View className="w-1/2 h-6 border-4 border-black overflow-hidden"><NeoSkeleton /></View>
         </View>
       );
     }
@@ -242,7 +237,16 @@ export default function PlaylistDetailScreen() {
     if (error || !playlist) {
       return (
         <View className="px-4 pt-4">
-           <NeoButton variant="ghost" icon={<ChevronLeft color="black" size={32} />} onPress={() => navigation.goBack()} />
+           <Pressable 
+             onPress={() => {
+               triggerHaptic();
+               navigation.goBack();
+             }}
+             className="w-11 h-11 items-center justify-center -ml-2"
+             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+           >
+             <ChevronLeft color="black" size={32} />
+           </Pressable>
         </View>
       );
     }
@@ -252,13 +256,30 @@ export default function PlaylistDetailScreen() {
     return (
       <View className="items-center px-4 pt-4 pb-8">
         <View className="flex-row items-center justify-between w-full">
-          <NeoButton variant="ghost" icon={<ChevronLeft color="black" size={32} />} onPress={() => navigation.goBack()} />
+          <Pressable 
+            onPress={() => {
+              triggerHaptic();
+              navigation.goBack();
+            }}
+            className="w-11 h-11 items-center justify-center -ml-2"
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <ChevronLeft color="black" size={32} />
+          </Pressable>
           {isOwner && (
-            <Pressable onPress={handleHeaderMenu} className="p-2">
+            <Pressable 
+              onPress={() => {
+                triggerHaptic();
+                handleHeaderMenu();
+              }} 
+              className="w-11 h-11 items-center justify-center -mr-2"
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
               <MoreHorizontal color="black" size={28} />
             </Pressable>
           )}
         </View>
+
         
         <View className="w-48 sm:w-60 aspect-square border-4 border-black -rotate-1 shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] bg-neo-muted mb-8 mt-4 relative overflow-hidden">
            {renderCoverArt()}

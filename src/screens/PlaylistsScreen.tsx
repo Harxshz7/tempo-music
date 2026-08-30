@@ -10,8 +10,10 @@ import { useNavigation } from '@react-navigation/native';
 import { ListMusic } from 'lucide-react-native';
 import subsonic from '../api/subsonic';
 import { useResponsive } from '../hooks/useResponsive';
-import { NeoText, NeoCard, NeoButton } from '../components/ui';
+import { NeoText, NeoCard, NeoButton, NeoSkeleton } from '../components/ui';
 import type { Playlist } from '../types';
+import { triggerHaptic } from '../utils/haptics';
+
 
 export default function PlaylistsScreen() {
   const navigation = useNavigation<any>();
@@ -43,8 +45,11 @@ export default function PlaylistsScreen() {
 
   const renderItem = ({ item }: { item: Playlist }) => (
     <Pressable 
-      onPress={() => navigation.navigate('PlaylistDetail', { playlistId: item.id })}
-      className="px-4 mb-3"
+      onPress={() => {
+        triggerHaptic();
+        navigation.navigate('PlaylistDetail', { playlistId: item.id });
+      }}
+      className="px-4 mb-3 active:opacity-75"
     >
       <View className="bg-white border-2 border-black p-3 flex-row items-center shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
         <View className="w-12 h-12 border-2 border-black bg-neo-secondary items-center justify-center mr-4 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
@@ -60,6 +65,23 @@ export default function PlaylistsScreen() {
       </View>
     </Pressable>
   );
+
+  const renderSkeletons = () => (
+    <View className="px-4 pt-2">
+      {[1, 2, 3, 4, 5].map((key) => (
+        <View key={key} className="bg-white border-2 border-black p-3 flex-row items-center mb-3 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+          <View className="w-12 h-12 border-2 border-black mr-4 overflow-hidden">
+            <NeoSkeleton />
+          </View>
+          <View className="flex-1">
+            <View className="w-3/4 h-5 border-2 border-black mb-2 overflow-hidden"><NeoSkeleton /></View>
+            <View className="w-1/3 h-3 border-2 border-black overflow-hidden"><NeoSkeleton /></View>
+          </View>
+        </View>
+      ))}
+    </View>
+  );
+
 
   return (
     <SafeAreaView className="flex-1 bg-neo-bg">

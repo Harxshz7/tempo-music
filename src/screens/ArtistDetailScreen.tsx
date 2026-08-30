@@ -11,26 +11,12 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { ChevronLeft, Play, Shuffle } from 'lucide-react-native';
 import subsonic from '../api/subsonic';
 import { useResponsive } from '../hooks/useResponsive';
-import { NeoText, NeoButton, NeoCard } from '../components/ui';
+import { NeoText, NeoButton, NeoCard, NeoSkeleton } from '../components/ui';
 import { usePlayerStore, Track } from '../store/playerStore';
 import AlbumGridItem from '../components/AlbumGridItem';
 import type { Artist, Album, Song } from '../types';
+import { triggerHaptic } from '../utils/haptics';
 
-const SkeletonPulse = () => {
-  const anim = useRef(new Animated.Value(0.5)).current;
-  useEffect(() => {
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(anim, { toValue: 1, duration: 800, useNativeDriver: true }),
-        Animated.timing(anim, { toValue: 0.5, duration: 800, useNativeDriver: true }),
-      ])
-    ).start();
-  }, [anim]);
-
-  return (
-    <Animated.View style={{ opacity: anim }} className="bg-neo-muted w-full h-full" />
-  );
-};
 
 export default function ArtistDetailScreen() {
   const navigation = useNavigation<any>();
@@ -118,13 +104,22 @@ export default function ArtistDetailScreen() {
       return (
         <View className="items-center px-4 pt-4 pb-8">
           <View className="self-start mb-6">
-            <NeoButton variant="ghost" icon={<ChevronLeft color="black" size={32} />} onPress={() => navigation.goBack()} />
+            <Pressable 
+              onPress={() => {
+                triggerHaptic();
+                navigation.goBack();
+              }}
+              className="w-11 h-11 items-center justify-center -ml-2"
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <ChevronLeft color="black" size={32} />
+            </Pressable>
           </View>
           <View className="w-48 h-48 border-4 border-black -rotate-1 shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] bg-neo-muted overflow-hidden">
-             <SkeletonPulse />
+             <NeoSkeleton />
           </View>
-          <View className="w-3/4 h-8 mt-8 mb-2 border-4 border-black overflow-hidden"><SkeletonPulse /></View>
-          <View className="w-1/2 h-6 border-4 border-black overflow-hidden"><SkeletonPulse /></View>
+          <View className="w-3/4 h-8 mt-8 mb-2 border-4 border-black overflow-hidden"><NeoSkeleton /></View>
+          <View className="w-1/2 h-6 border-4 border-black overflow-hidden"><NeoSkeleton /></View>
         </View>
       );
     }
@@ -132,7 +127,16 @@ export default function ArtistDetailScreen() {
     if (error && !artist) {
       return (
         <View className="px-4 pt-4">
-           <NeoButton variant="ghost" icon={<ChevronLeft color="black" size={32} />} onPress={() => navigation.goBack()} />
+           <Pressable 
+             onPress={() => {
+               triggerHaptic();
+               navigation.goBack();
+             }}
+             className="w-11 h-11 items-center justify-center -ml-2"
+             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+           >
+             <ChevronLeft color="black" size={32} />
+           </Pressable>
         </View>
       );
     }
@@ -145,7 +149,16 @@ export default function ArtistDetailScreen() {
     return (
       <View className="items-center px-4 pt-4 pb-8">
         <View className="self-start w-full">
-          <NeoButton variant="ghost" icon={<ChevronLeft color="black" size={32} />} onPress={() => navigation.goBack()} />
+          <Pressable 
+            onPress={() => {
+              triggerHaptic();
+              navigation.goBack();
+            }}
+            className="w-11 h-11 items-center justify-center -ml-2"
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <ChevronLeft color="black" size={32} />
+          </Pressable>
         </View>
         
         <View className="w-44 sm:w-56 aspect-square border-4 border-black -rotate-1 shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] bg-neo-muted mb-8 relative justify-center items-center overflow-hidden">
@@ -169,6 +182,7 @@ export default function ArtistDetailScreen() {
             </>
           )}
         </View>
+
 
         <View className="flex-row items-center justify-center gap-3 mt-8 w-full max-w-md px-6 mb-8">
           <NeoButton 
