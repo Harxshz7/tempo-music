@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { ActivityIndicator, View, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -18,6 +18,10 @@ import PlaylistDetailScreen from '../screens/PlaylistDetailScreen';
 // SPIKE-ONLY — remove before merge
 import AudioSpikeScreen from '../screens/AudioSpikeScreen';
 
+import { useResponsive } from '../hooks/useResponsive';
+import DesktopSidebar from '../navigation/DesktopSidebar';
+import { NeoPlayerBar } from './NeoPlayerBar';
+
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
@@ -27,11 +31,12 @@ function MainTabs() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: '#121212',
-          borderTopColor: '#1e1e1e',
+          backgroundColor: '#FFFDF5',
+          borderTopColor: '#000000',
+          borderTopWidth: 2,
         },
-        tabBarActiveTintColor: '#1db954',
-        tabBarInactiveTintColor: '#888',
+        tabBarActiveTintColor: '#FF6B6B',
+        tabBarInactiveTintColor: 'rgba(0, 0, 0, 0.5)',
       }}
     >
       <Tab.Screen
@@ -58,22 +63,14 @@ function MainTabs() {
   );
 }
 
-import { useResponsive } from '../hooks/useResponsive';
-import DesktopSidebar from '../navigation/DesktopSidebar';
-import { NeoPlayerBar } from './NeoPlayerBar';
-
 export default function Navigation() {
-  const { isAuthenticated, isLoading, restoreSession } = useAuthStore();
+  const { isAuthenticated, isLoading } = useAuthStore();
   const { isDesktop } = useResponsive();
-
-  useEffect(() => {
-    restoreSession();
-  }, [restoreSession]);
 
   if (isLoading) {
     return (
       <View style={styles.loading}>
-        <ActivityIndicator size="large" color="#1db954" />
+        <ActivityIndicator size="large" color="#000000" />
       </View>
     );
   }
@@ -118,7 +115,6 @@ export default function Navigation() {
           )}
         </Stack.Navigator>
 
-        
         {/* Render player bar. On desktop pinned to bottom-0, on mobile pinned above the 50px tab bar. */}
         {isAuthenticated && (
           <View pointerEvents="box-none" className={`absolute ${isDesktop ? 'bottom-0' : 'bottom-[50px]'} w-full z-50`}>
@@ -135,6 +131,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#121212',
+    backgroundColor: '#FFFDF5',
   },
 });
