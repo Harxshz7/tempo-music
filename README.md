@@ -43,6 +43,22 @@ Press `w` for web, `a` for Android emulator, `i` for iOS simulator, or scan the 
 
 On first launch, enter your Subsonic/Navidrome server URL, username, and password to connect.
 
+## Development Setup
+
+Background audio, lock-screen controls, and media notifications require native modules that are **not available in Expo Go**. You need a custom dev client:
+
+```bash
+# Local build (requires Android Studio / Xcode installed)
+npx expo run:android          # Build & install on Android device/emulator
+npx expo run:ios              # Build & install on iOS simulator/device
+
+# Cloud build via EAS (no local toolchain needed)
+npx eas build --platform android --profile development
+npx eas build --platform ios --profile development
+```
+
+> **Note:** `npx expo start` / Expo Go is still fine for UI development and web testing. Use the custom dev client only when testing audio features.
+
 ## Tech Stack
 
 - React Native + Expo (SDK 57)
