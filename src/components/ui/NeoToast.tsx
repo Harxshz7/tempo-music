@@ -7,10 +7,16 @@ export function NeoToast() {
 
   if (!message) return null;
 
-  const bgStyles = {
-    error: 'bg-neo-accent text-white',
-    info: 'bg-neo-secondary text-black',
-    success: 'bg-neo-yellow text-black',
+  const bgStyle = {
+    error: 'bg-neo-accent',
+    info: 'bg-neo-secondary',
+    success: 'bg-neo-yellow',
+  }[type];
+
+  const textStyle = {
+    error: 'text-white',
+    info: 'text-black',
+    success: 'text-black',
   }[type];
 
   return (
@@ -21,12 +27,12 @@ export function NeoToast() {
       <TouchableOpacity
         activeOpacity={0.9}
         onPress={hideToast}
-        className={`px-4 py-3 rounded-none border-2 border-neo-black shadow-neo-sm flex-row items-center justify-between ${bgStyles}`}
+        className={`px-4 py-3 border-2 border-neo-black shadow-neo flex-row items-center justify-between ${bgStyle}`}
       >
-        <Text className="font-space-bold text-sm text-black flex-1 mr-2">
+        <Text className={`font-space-bold text-sm flex-1 mr-2 ${textStyle}`}>
           {message}
         </Text>
-        <Text className="font-space-bold text-xs text-black opacity-60">✕</Text>
+        <Text className={`font-space-bold text-xs opacity-80 ${textStyle}`}>✕</Text>
       </TouchableOpacity>
     </View>
   );

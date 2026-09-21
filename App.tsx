@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import Navigation from './src/components/Navigation';
+import { NeoToast } from './src/components/ui/NeoToast';
 import { useFonts, SpaceGrotesk_400Regular, SpaceGrotesk_500Medium, SpaceGrotesk_700Bold } from '@expo-google-fonts/space-grotesk';
 import * as SplashScreen from 'expo-splash-screen';
 import { useAuthStore } from './src/store/authStore';
@@ -47,6 +48,7 @@ export default function App() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <StatusBar style="dark" />
       <Navigation />
+      <NeoToast />
     </GestureHandlerRootView>
   );
 }
