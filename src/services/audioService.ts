@@ -1,8 +1,7 @@
 import { Audio, InterruptionModeIOS, InterruptionModeAndroid, AVPlaybackStatus } from 'expo-av';
 import { updateNotificationPlayer, setupNotificationPlayer } from './notificationPlayer';
-import { usePlayerStore } from '../store/playerStore';
+import { usePlayerStore, Track } from '../store/playerStore';
 import { showToast } from './toast';
-import type { Track } from '../types';
 
 class AudioService {
   private sound: Audio.Sound | null = null;

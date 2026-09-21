@@ -6,6 +6,7 @@ import {
   Image,
   Animated,
   useWindowDimensions,
+  Pressable,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { ChevronLeft, Play, Shuffle } from 'lucide-react-native';

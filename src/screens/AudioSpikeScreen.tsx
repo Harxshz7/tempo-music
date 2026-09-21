@@ -45,7 +45,7 @@ export default function AudioSpikeScreen() {
   if (!useAudioPlayer || !useAudioPlayerStatus) {
     return (
       <View className="flex-1 bg-neo-bg items-center justify-center p-6">
-        <NeoText variant="heading" className="text-center mb-4">
+        <NeoText variant="h2" className="text-center mb-4">
           expo-audio not available
         </NeoText>
         <NeoText variant="body" className="text-center opacity-70">
@@ -195,9 +195,9 @@ function AudioSpikeInner({
         {/* Header */}
         <View className="flex-row items-center mb-4 mt-12">
           <Pressable onPress={() => navigation.goBack()} className="mr-3">
-            <NeoText variant="heading" className="text-2xl">←</NeoText>
+            <NeoText variant="h2" className="text-2xl">←</NeoText>
           </Pressable>
-          <NeoText variant="heading" className="text-xl uppercase">
+          <NeoText variant="h2" className="text-xl uppercase">
             🧪 expo-audio Spike
           </NeoText>
         </View>
