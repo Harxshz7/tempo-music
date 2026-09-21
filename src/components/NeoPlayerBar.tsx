@@ -103,9 +103,11 @@ export function NeoPlayerBar() {
         <Pressable onPress={() => navigation.navigate('Player')} className="relative">
            {/* Static Shadow */}
            <View className="absolute top-[3px] left-[3px] w-[52px] h-[52px] bg-black -rotate-2" />
-           <Image 
-             source={currentTrack.coverArtUrl ? { uri: currentTrack.coverArtUrl } : require('../../assets/icon.png')} 
-             className="w-[52px] h-[52px] bg-neo-muted border-[3px] border-black -rotate-2"
+           <NeoCoverArt
+             url={currentTrack.coverArtUrl}
+             className="w-[52px] h-[52px] -rotate-2"
+             imageClassName="w-full h-full border-[3px] border-black bg-neo-muted"
+             fallbackIconSize={24}
            />
         </Pressable>
 

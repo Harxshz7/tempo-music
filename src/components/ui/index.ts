@@ -6,3 +6,4 @@ export * from './NeoInput';
 export * from './NeoBadge';
 export * from './NeoSkeleton';
 export * from './NeoSwitch';
+export * from './NeoCoverArt';

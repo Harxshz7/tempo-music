@@ -1,28 +1,25 @@
-import { Audio, InterruptionModeIOS, InterruptionModeAndroid, AVPlaybackStatus } from 'expo-av';
-import { updateNotificationPlayer, setupNotificationPlayer } from './notificationPlayer';
+import { createAudioPlayer, setAudioModeAsync, AudioPlayer } from 'expo-audio';
 import { usePlayerStore, Track } from '../store/playerStore';
 import { showToast } from './toast';
 
 class AudioService {
-  private sound: Audio.Sound | null = null;
+  private player: AudioPlayer | null = null;
   private currentLoadedTrackId: string | null = null;
   private isAudioConfigured = false;
+  private statusSubscription: any = null;
 
   async configureAudioIfNeeded(): Promise<void> {
     if (this.isAudioConfigured) return;
     this.isAudioConfigured = true;
 
     try {
-      await Audio.setAudioModeAsync({
-        playsInSilentModeIOS: true,
-        staysActiveInBackground: true,
-        shouldDuckAndroid: true,
-        interruptionModeIOS: InterruptionModeIOS.DoNotMix,
-        interruptionModeAndroid: InterruptionModeAndroid.DoNotMix,
+      await setAudioModeAsync({
+        playsInSilentMode: true,
+        shouldPlayInBackground: true,
+        interruptionMode: 'doNotMix',
       });
-      setupNotificationPlayer();
-    } catch {
-      // Audio config fallback
+    } catch (e: any) {
+      console.warn('[AudioService] Audio mode config fallback:', e);
     }
   }
 
@@ -34,7 +31,12 @@ class AudioService {
       return;
     }
 
-    if (this.currentLoadedTrackId === track.id && this.sound) {
+    if (this.currentLoadedTrackId === track.id && this.player) {
+      if (isPlaying && !this.player.playing) {
+        this.player.play();
+      } else if (!isPlaying && this.player.playing) {
+        this.player.pause();
+      }
       return;
     }
 
@@ -46,23 +48,57 @@ class AudioService {
     }
 
     try {
-      const restoredPosition = usePlayerStore.getState().positionMillis;
-      const initialPosition = restoredPosition > 0 ? restoredPosition : 0;
+      const restoredPositionMillis = usePlayerStore.getState().positionMillis;
+      const initialPositionSeconds = restoredPositionMillis > 0 ? restoredPositionMillis / 1000 : 0;
 
-      const { sound, status } = await Audio.Sound.createAsync(
+      const player = createAudioPlayer(
         { uri: track.streamUrl },
-        { 
-          shouldPlay: isPlaying,
-          positionMillis: initialPosition,
-          progressUpdateIntervalMillis: 500,
-        },
-        this.onPlaybackStatusUpdate
+        { updateInterval: 500 }
       );
 
-      this.sound = sound;
+      this.player = player;
 
-      if (initialPosition > 0 && status.isLoaded && status.positionMillis !== initialPosition) {
-        await sound.setPositionAsync(initialPosition).catch(() => {});
+      // Configure lock screen metadata for MediaSession / Now Playing Center
+      try {
+        player.setActiveForLockScreen(true, {
+          title: track.title,
+          artist: track.artist,
+          albumTitle: track.album || 'Tempo Music',
+          artworkUrl: track.coverArtUrl,
+        });
+      } catch (err) {
+        // Fallback for web / unsupported lockscreen platforms
+      }
+
+      // Status listener
+      this.statusSubscription = player.addListener('playbackStatusUpdate', (status) => {
+        if (!status) return;
+
+        const setPositionMillis = usePlayerStore.getState().setPositionMillis;
+        const setDurationMillis = usePlayerStore.getState().setDurationMillis;
+        const playNext = usePlayerStore.getState().playNext;
+
+        if (status.currentTime !== undefined) {
+          setPositionMillis(Math.floor(status.currentTime * 1000));
+        }
+        if (status.duration && status.duration > 0) {
+          setDurationMillis(Math.floor(status.duration * 1000));
+        }
+
+        // Check if track just finished
+        if (status.currentTime && status.duration && status.duration > 0) {
+          if (status.currentTime >= status.duration - 0.3 && !status.playing) {
+            playNext();
+          }
+        }
+      });
+
+      if (initialPositionSeconds > 0) {
+        player.seekTo(initialPositionSeconds);
+      }
+
+      if (isPlaying) {
+        player.play();
       }
     } catch (err: any) {
       this.currentLoadedTrackId = null;
@@ -77,32 +113,44 @@ class AudioService {
   }
 
   async setPlaybackState(track: Track | null, isPlaying: boolean): Promise<void> {
-    if (this.sound) {
-      if (isPlaying) {
-        await this.sound.playAsync().catch(() => {});
-      } else {
-        await this.sound.pauseAsync().catch(() => {});
+    if (this.player) {
+      try {
+        if (isPlaying) {
+          this.player.play();
+        } else {
+          this.player.pause();
+        }
+      } catch {
+        // Player state change error
       }
     }
-    updateNotificationPlayer(track, isPlaying);
   }
 
   async unloadTrack(): Promise<void> {
-    if (this.sound) {
+    if (this.statusSubscription) {
       try {
-        await this.sound.unloadAsync();
+        this.statusSubscription.remove();
+      } catch {}
+      this.statusSubscription = null;
+    }
+
+    if (this.player) {
+      try {
+        this.player.pause();
+        this.player.remove();
       } catch {
-        // Ignore error during unload
+        // Ignore error during cleanup
       }
-      this.sound = null;
+      this.player = null;
       this.currentLoadedTrackId = null;
     }
   }
 
   async seek(millis: number): Promise<void> {
-    if (this.sound) {
+    if (this.player) {
       try {
-        await this.sound.setPositionAsync(millis);
+        const seconds = Math.max(0, millis / 1000);
+        this.player.seekTo(seconds);
       } catch (err: any) {
         showToast("Seek failed", 'error');
       }
@@ -111,35 +159,21 @@ class AudioService {
   }
 
   async syncStatusOnForeground(isPlaying: boolean): Promise<void> {
-    if (!this.sound) return;
+    if (!this.player) return;
     try {
-      const status = await this.sound.getStatusAsync();
-      if (status.isLoaded) {
-        usePlayerStore.getState().setPositionMillis(status.positionMillis);
-        if (status.durationMillis) {
-          usePlayerStore.getState().setDurationMillis(status.durationMillis);
-        }
-        if (status.isPlaying !== isPlaying) {
-          usePlayerStore.getState().setIsPlaying(status.isPlaying);
-        }
+      if (this.player.currentTime !== undefined) {
+        usePlayerStore.getState().setPositionMillis(Math.floor(this.player.currentTime * 1000));
+      }
+      if (this.player.duration && this.player.duration > 0) {
+        usePlayerStore.getState().setDurationMillis(Math.floor(this.player.duration * 1000));
+      }
+      if (this.player.playing !== isPlaying) {
+        usePlayerStore.getState().setIsPlaying(this.player.playing);
       }
     } catch {
       // Reconcile silently on foreground
     }
   }
-
-  private onPlaybackStatusUpdate = (status: AVPlaybackStatus) => {
-    if (status.isLoaded) {
-      const { setPositionMillis, setDurationMillis, playNext } = usePlayerStore.getState();
-      setPositionMillis(status.positionMillis);
-      if (status.durationMillis) {
-        setDurationMillis(status.durationMillis);
-      }
-      if (status.didJustFinish) {
-        playNext();
-      }
-    }
-  };
 }
 
 export const audioService = new AudioService();
