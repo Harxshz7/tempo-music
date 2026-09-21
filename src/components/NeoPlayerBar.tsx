@@ -4,7 +4,7 @@ import Animated, { useAnimatedStyle, useSharedValue, withTiming, Easing } from '
 import { SkipBack, SkipForward, Play, Pause } from 'lucide-react-native';
 import { usePlayerStore } from '../store/playerStore';
 import { useAudioPlayer } from '../hooks/useAudioPlayer';
-import { NeoText } from './ui/NeoText';
+import { NeoText, NeoCoverArt } from './ui';
 import { useNavigation } from '@react-navigation/native';
 
 import { triggerHaptic } from '../utils/haptics';
