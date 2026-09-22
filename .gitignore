@@ -1,57 +1,74 @@
-# Node & Dependencies
+# Dependencies & Packages
 node_modules/
+*.tgz
+
+# Logs
+logs/
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
 lerna-debug.log*
-*.log
 
-# Expo & EAS
+# Environment Variables & Secrets
+# The whole family is ignored, not just .env — .env.production leaks
+# just as often. Templates stay committed so onboarding is copy-paste.
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# Keys, Certificates & Provisioning Profiles
+*.jks
+*.keystore
+*.p8
+*.p12
+*.pfx
+*.key
+*.pem
+*.mobileprovision
+
+# Expo, EAS & Metro
 .expo/
 dist/
 web-build/
 .eas/
 expo-env.d.ts
+.metro-health-check*
 
-# Generated Native Projects
+# Generated Native Projects (expo prebuild output — regenerate, never commit)
 /ios/
 /android/
 .kotlin/
 
-# Keys, Certificates & Provisioning
-*.orig.*
-*.jks
-*.p8
-*.p12
-*.key
-*.pem
-*.mobileprovision
-*.keystore
-
-# Metro & Bundlers
-.metro-health-check*
+# Caches & Build Artifacts
+node_modules/.cache/
+*.tsbuildinfo
+*.tmp
 
 # Testing & Coverage
 coverage/
 .nyc_output/
 
-# TypeScript
-*.tsbuildinfo
+# Merge Conflict Leftovers
+*.orig
+*.orig.*
+*.rej
 
-# Local Environment & Secrets
-.env
-.env*.local
-
-# IDEs, AI & Editor Settings
+# IDEs, Editors & AI Tooling
 .vscode/
 .idea/
+.fleet/
 .claude/
 .gemini/
 .agents/
+.cursor/
 *.swp
 *.swo
+*~
 
-# OS System Files
+# OS Metadata
 .DS_Store
 .DS_Store?
 ._*
@@ -59,3 +76,4 @@ coverage/
 .Trashes
 ehthumbs.db
 Thumbs.db
+desktop.ini
