@@ -7,13 +7,13 @@ import {
   Pressable,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { ListMusic } from 'lucide-react-native';
+import { ListMusic, Plus } from 'lucide-react-native';
 import subsonic from '../api/subsonic';
 import { useResponsive } from '../hooks/useResponsive';
 import { NeoText, NeoCard, NeoButton, NeoSkeleton } from '../components/ui';
+import CreatePlaylistModal from '../components/CreatePlaylistModal';
 import type { Playlist } from '../types';
 import { triggerHaptic } from '../utils/haptics';
-
 
 export default function PlaylistsScreen() {
   const navigation = useNavigation<any>();
@@ -22,6 +22,7 @@ export default function PlaylistsScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   const loadPlaylists = useCallback(async (refresh = false) => {
     try {
@@ -82,16 +83,27 @@ export default function PlaylistsScreen() {
     </View>
   );
 
-
   return (
     <SafeAreaView className="flex-1 bg-neo-bg">
       <View className={`flex-1 ${containerClass}`}>
-        <View className="px-4 pt-6 pb-4">
-          <View className="-rotate-1 self-start mb-4">
+        <View className="px-4 pt-6 pb-4 flex-row items-center justify-between">
+          <View className="-rotate-1 self-start">
             <NeoText className="font-space-grotesk-black text-4xl uppercase tracking-tighter">
               Playlists
             </NeoText>
           </View>
+          <Pressable
+            onPress={() => {
+              triggerHaptic();
+              setShowCreateModal(true);
+            }}
+            className="bg-neo-secondary border-4 border-black px-4 py-2 flex-row items-center gap-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:opacity-75"
+          >
+            <Plus color="black" size={20} />
+            <NeoText variant="caption" className="font-black text-xs uppercase">
+              NEW
+            </NeoText>
+          </Pressable>
         </View>
 
         {error && !isLoading && (
@@ -121,15 +133,23 @@ export default function PlaylistsScreen() {
                 <View className="flex-1 items-center justify-center px-6 py-20">
                   <NeoCard className="items-center p-8 bg-white border-4 border-black rotate-1">
                     <NeoText variant="h3" className="font-black uppercase mb-2 text-center">NO PLAYLISTS FOUND</NeoText>
-                    <NeoText variant="caption" className="font-bold opacity-70 text-center">Create playlists in Navidrome</NeoText>
+                    <NeoText variant="caption" className="font-bold opacity-70 text-center mb-4">Create your first playlist now</NeoText>
+                    <NeoButton label="CREATE PLAYLIST" variant="primary" onPress={() => setShowCreateModal(true)} />
                   </NeoCard>
                 </View>
               ) : null
             }
           />
         )}
+
+        <CreatePlaylistModal
+          visible={showCreateModal}
+          onClose={() => setShowCreateModal(false)}
+          onCreated={() => loadPlaylists(true)}
+        />
       </View>
     </SafeAreaView>
   );
 }
+
 

@@ -6,21 +6,25 @@ import {
   Pressable,
   Image,
   ScrollView,
-  useWindowDimensions,
   ActivityIndicator,
   Platform,
+  Alert,
 } from 'react-native';
-import { Search, X } from 'lucide-react-native';
+import { Search, X, Clock, Trash2, Star, Plus, Download } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import subsonic from '../api/subsonic';
 import { useResponsive } from '../hooks/useResponsive';
-import { NeoText, NeoInput, NeoButton } from '../components/ui';
-import { TrackRow, AlbumGridItem } from '../components';
+import { NeoText, NeoInput, NeoButton, NeoCard } from '../components/ui';
+import { TrackRow, AlbumGridItem, AddToPlaylistModal } from '../components';
 import { useDebounce } from '../hooks/useDebounce';
 import { usePlayerStore, Track } from '../store/playerStore';
 import type { Artist, Album, Song } from '../types';
 import { triggerHaptic } from '../utils/haptics';
+import { useStarredStore } from '../store/starredStore';
+import { offlineService } from '../services/offlineService';
 
+const RECENT_SEARCHES_KEY = 'tempo_recent_searches';
 
 type SearchTab = 'ALL' | 'ARTISTS' | 'ALBUMS' | 'SONGS';
 
@@ -30,25 +34,77 @@ interface SearchState {
   songs: Song[];
 }
 
+/** Score helper for ranking: 1 = exact match, 2 = prefix match, 3 = word match, 4 = substring match */
+function getMatchRank(text: string, query: string): number {
+  const t = text.toLowerCase().trim();
+  const q = query.toLowerCase().trim();
+  if (t === q) return 1;
+  if (t.startsWith(q)) return 2;
+  const words = t.split(/\s+/);
+  if (words.some((w) => w.startsWith(q))) return 3;
+  if (t.includes(q)) return 4;
+  return 5;
+}
+
 export default function SearchScreen() {
   const navigation = useNavigation<any>();
   const { numColumns, containerClass, isDesktop, isTablet } = useResponsive();
 
   const [query, setQuery] = useState('');
-  const debouncedQuery = useDebounce(query, 400);
+  const debouncedQuery = useDebounce(query, 350);
 
   const [results, setResults] = useState<SearchState>({ artists: [], albums: [], songs: [] });
   const [isFetching, setIsFetching] = useState(false);
   const [activeTab, setActiveTab] = useState<SearchTab>('ALL');
   const [hasSearched, setHasSearched] = useState(false);
 
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
+
+  const [addToPlaylistSong, setAddToPlaylistSong] = useState<Song | null>(null);
+  const [isAddToPlaylistVisible, setIsAddToPlaylistVisible] = useState(false);
+
   const { currentTrack, setQueue } = usePlayerStore();
+
+  // Load recent searches on mount
+  useEffect(() => {
+    const loadRecent = async () => {
+      try {
+        const raw = await AsyncStorage.getItem(RECENT_SEARCHES_KEY);
+        if (raw) setRecentSearches(JSON.parse(raw));
+      } catch {}
+    };
+    loadRecent();
+  }, []);
+
+  const saveRecentSearch = async (text: string) => {
+    if (!text || text.length < 2) return;
+    try {
+      const filtered = recentSearches.filter((item) => item.toLowerCase() !== text.toLowerCase());
+      const updated = [text, ...filtered].slice(0, 10);
+      setRecentSearches(updated);
+      await AsyncStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(updated));
+    } catch {}
+  };
+
+  const removeRecentSearch = async (text: string) => {
+    try {
+      const updated = recentSearches.filter((item) => item !== text);
+      setRecentSearches(updated);
+      await AsyncStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(updated));
+    } catch {}
+  };
+
+  const clearAllRecentSearches = async () => {
+    try {
+      setRecentSearches([]);
+      await AsyncStorage.removeItem(RECENT_SEARCHES_KEY);
+    } catch {}
+  };
 
   useEffect(() => {
     if (debouncedQuery.trim().length >= 2) {
       performSearch(debouncedQuery.trim());
     } else {
-      // Clear if empty or less than 2 chars
       setResults({ artists: [], albums: [], songs: [] });
       setHasSearched(false);
       setIsFetching(false);
@@ -57,12 +113,33 @@ export default function SearchScreen() {
 
   const performSearch = async (text: string) => {
     setIsFetching(true);
+    saveRecentSearch(text);
     try {
       const res = await subsonic.search3(text, 50, 50, 50);
+
+      // Apply ranking algorithm (exact > prefix > word > substring)
+      const rankedArtists = (res.artist ?? []).sort((a, b) => {
+        const rA = getMatchRank(a.name, text);
+        const rB = getMatchRank(b.name, text);
+        return rA - rB;
+      });
+
+      const rankedAlbums = (res.album ?? []).sort((a, b) => {
+        const rA = getMatchRank(a.name, text);
+        const rB = getMatchRank(b.name, text);
+        return rA - rB;
+      });
+
+      const rankedSongs = (res.song ?? []).sort((a, b) => {
+        const rA = getMatchRank(a.title, text);
+        const rB = getMatchRank(b.title, text);
+        return rA - rB;
+      });
+
       setResults({
-        artists: res.artist ?? [],
-        albums: res.album ?? [],
-        songs: res.song ?? [],
+        artists: rankedArtists,
+        albums: rankedAlbums,
+        songs: rankedSongs,
       });
       setHasSearched(true);
     } catch (e) {
@@ -89,9 +166,77 @@ export default function SearchScreen() {
     setQueue(tracks, index);
   };
 
-  const handleMenuPress = (track: Track) => {
-    // Add to queue logic if needed
+  const handleMenuPress = (track: Track, songObj?: Song) => {
+    const song = songObj || results.songs.find((s) => s.id === track.id);
+    if (!song) return;
+
+    Alert.alert('Track Options', track.title, [
+      {
+        text: 'Add to Playlist',
+        onPress: () => {
+          setAddToPlaylistSong(song);
+          setIsAddToPlaylistVisible(true);
+        },
+      },
+      {
+        text: 'Download Track',
+        onPress: () => {
+          offlineService.downloadTrack(song);
+        },
+      },
+      {
+        text: 'Cancel',
+        style: 'cancel',
+      },
+    ]);
   };
+
+  const renderRecentSearches = () => (
+    <View className="px-4 pt-4">
+      <View className="flex-row items-center justify-between mb-3">
+        <View className="flex-row items-center gap-2">
+          <Clock color="black" size={18} />
+          <NeoText className="font-black uppercase text-sm tracking-wider">
+            RECENT SEARCHES
+          </NeoText>
+        </View>
+        {recentSearches.length > 0 && (
+          <Pressable onPress={clearAllRecentSearches} className="px-2 py-1">
+            <NeoText variant="caption" className="font-bold text-neo-accent uppercase text-xs">
+              Clear All
+            </NeoText>
+          </Pressable>
+        )}
+      </View>
+
+      <View className="flex-row flex-wrap gap-2">
+        {recentSearches.map((item) => (
+          <View
+            key={item}
+            className="flex-row items-center bg-white border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] px-3 py-1.5"
+          >
+            <Pressable
+              onPress={() => {
+                triggerHaptic();
+                setQuery(item);
+              }}
+            >
+              <NeoText className="font-bold text-xs uppercase mr-2">{item}</NeoText>
+            </Pressable>
+            <Pressable
+              onPress={() => {
+                triggerHaptic();
+                removeRecentSearch(item);
+              }}
+              hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}
+            >
+              <X color="black" size={14} />
+            </Pressable>
+          </View>
+        ))}
+      </View>
+    </View>
+  );
 
   const renderTabs = () => {
     const tabs: { key: SearchTab; label: string }[] = [
@@ -148,7 +293,6 @@ export default function SearchScreen() {
     );
   };
 
-
   const renderSectionHeader = (title: string, onSeeAll: () => void) => (
     <View className="flex-row justify-between items-end px-4 mb-3 mt-6">
       <View className="border-b-4 border-black pb-1">
@@ -197,7 +341,7 @@ export default function SearchScreen() {
               index={idx}
               isPlaying={currentTrack?.id === song.id}
               onPress={() => handleSongPress(idx, results.songs.slice(0, maxSongsShown))}
-              onMenuPress={handleMenuPress}
+              onMenuPress={(t) => handleMenuPress(t, song)}
             />
           ))}
         </View>
@@ -261,7 +405,7 @@ export default function SearchScreen() {
           index={index}
           isPlaying={currentTrack?.id === item.id}
           onPress={() => handleSongPress(index, results.songs)}
-          onMenuPress={handleMenuPress}
+          onMenuPress={(t) => handleMenuPress(t, item)}
         />
       )}
     />
@@ -289,11 +433,11 @@ export default function SearchScreen() {
             leftIcon={<Search color="black" size={24} />}
             rightIcon={
               query.length > 0 ? (
-                <Pressable 
+                <Pressable
                   onPress={() => {
                     triggerHaptic();
                     setQuery('');
-                  }} 
+                  }}
                   className="w-11 h-11 items-center justify-center -mr-2"
                   hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                 >
@@ -301,7 +445,6 @@ export default function SearchScreen() {
                 </Pressable>
               ) : undefined
             }
-
           />
         </View>
 
@@ -317,11 +460,14 @@ export default function SearchScreen() {
           )}
 
           {isIdle ? (
-            <View className="flex-1 items-center justify-center pb-32">
-              <Search color="black" size={80} opacity={0.2} />
-              <NeoText className="font-black uppercase text-xl mt-4 opacity-50 text-center px-8">
-                SEARCH YOUR LIBRARY
-              </NeoText>
+            <View className="flex-1">
+              {recentSearches.length > 0 && renderRecentSearches()}
+              <View className="flex-1 items-center justify-center pb-20">
+                <Search color="black" size={80} opacity={0.2} />
+                <NeoText className="font-black uppercase text-xl mt-4 opacity-50 text-center px-8">
+                  SEARCH YOUR LIBRARY
+                </NeoText>
+              </View>
             </View>
           ) : isNoResults ? (
             <View className="flex-1 items-center justify-center pb-32">
@@ -341,7 +487,14 @@ export default function SearchScreen() {
             </>
           )}
         </View>
+
+        <AddToPlaylistModal
+          visible={isAddToPlaylistVisible}
+          onClose={() => setIsAddToPlaylistVisible(false)}
+          songsToAdd={addToPlaylistSong ? [addToPlaylistSong] : []}
+        />
       </View>
     </SafeAreaView>
   );
 }
+
