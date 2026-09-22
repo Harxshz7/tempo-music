@@ -1,12 +1,18 @@
 import { createAudioPlayer, setAudioModeAsync, AudioPlayer } from 'expo-audio';
 import { usePlayerStore, Track } from '../store/playerStore';
 import { showToast } from './toast';
+import { offlineService } from './offlineService';
+import { usePlayCountStore } from '../store/playCountStore';
+import { useSettingsStore } from '../store/settingsStore';
+import subsonic from '../api/subsonic';
 
 class AudioService {
   private player: AudioPlayer | null = null;
   private currentLoadedTrackId: string | null = null;
   private isAudioConfigured = false;
   private statusSubscription: any = null;
+  private hasScrobbled = false;
+  private hasRecordedPlay = false;
 
   async configureAudioIfNeeded(): Promise<void> {
     if (this.isAudioConfigured) return;
@@ -42,6 +48,8 @@ class AudioService {
 
     await this.unloadTrack();
     this.currentLoadedTrackId = track.id;
+    this.hasScrobbled = false;
+    this.hasRecordedPlay = false;
 
     if (track.duration) {
       usePlayerStore.getState().setDurationMillis(track.duration * 1000);
@@ -51,8 +59,13 @@ class AudioService {
       const restoredPositionMillis = usePlayerStore.getState().positionMillis;
       const initialPositionSeconds = restoredPositionMillis > 0 ? restoredPositionMillis / 1000 : 0;
 
+      // Determine bitRate preference & offline file URL
+      const bitrate = useSettingsStore.getState().audioBitrate;
+      const rawStreamUrl = subsonic.getStreamUrl(track.id, bitrate);
+      const playableUri = await offlineService.getAudioPlaybackUrl(track.id, rawStreamUrl);
+
       const player = createAudioPlayer(
-        { uri: track.streamUrl },
+        { uri: playableUri },
         { updateInterval: 500 }
       );
 
@@ -83,6 +96,23 @@ class AudioService {
         }
         if (status.duration && status.duration > 0) {
           setDurationMillis(Math.floor(status.duration * 1000));
+        }
+
+        const currentTime = status.currentTime || 0;
+        const duration = status.duration || 0;
+
+        // Record local play count after 30 seconds
+        if (!this.hasRecordedPlay && (currentTime >= 30 || (duration > 0 && currentTime >= duration - 0.5))) {
+          this.hasRecordedPlay = true;
+          usePlayCountStore.getState().recordPlay(track.id);
+        }
+
+        // Handle Subsonic Scrobbling if enabled (50% played or finished)
+        if (!this.hasScrobbled && duration > 0 && currentTime >= duration * 0.5) {
+          this.hasScrobbled = true;
+          if (useSettingsStore.getState().subsonicScrobbleEnabled) {
+            subsonic.scrobble(track.id).catch(() => {});
+          }
         }
 
         // Check if track just finished

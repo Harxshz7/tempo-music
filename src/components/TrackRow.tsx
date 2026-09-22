@@ -1,11 +1,13 @@
 import React from 'react';
 import { View, Pressable, ActivityIndicator } from 'react-native';
-import { MoreHorizontal } from 'lucide-react-native';
+import { MoreHorizontal, Star, HardDriveDownload } from 'lucide-react-native';
 import { NeoText } from './ui';
 import { Track } from '../store/playerStore';
 import type { Song } from '../types';
 import subsonic from '../api/subsonic';
 import { triggerHaptic } from '../utils/haptics';
+import { useStarredStore } from '../store/starredStore';
+import { useOfflineStore } from '../services/offlineService';
 
 interface TrackRowProps {
   song: Song;
@@ -15,6 +17,7 @@ interface TrackRowProps {
   onMenuPress: (track: Track) => void;
   albumArtUrl?: string; // used for mapping if coverArt isn't on song
   fallbackArtist?: string; // used if song doesn't have artist
+  showStarToggle?: boolean;
 }
 
 export const TRACK_ROW_HEIGHT = 60;
@@ -26,9 +29,14 @@ export default function TrackRow({
   onPress,
   onMenuPress,
   albumArtUrl,
-  fallbackArtist
+  fallbackArtist,
+  showStarToggle = true,
 }: TrackRowProps) {
-  
+  const isStarred = useStarredStore((state) => state.isSongStarred(song.id, song.starred));
+  const toggleStar = useStarredStore((state) => state.toggleStarSong);
+
+  const isDownloaded = useOfflineStore((state) => state.downloads[song.id]?.status === 'done');
+
   const formatDuration = (seconds?: number) => {
     if (!seconds) return '0:00';
     const m = Math.floor(seconds / 60);
@@ -52,6 +60,11 @@ export default function TrackRow({
     onPress();
   };
 
+  const handleStarPress = () => {
+    triggerHaptic();
+    toggleStar(song.id, isStarred);
+  };
+
   return (
     <Pressable 
       className={`flex-row items-center px-4 py-3 min-h-[56px] border-b-2 border-black active:opacity-70 ${isPlaying ? 'bg-neo-secondary/30' : 'bg-transparent active:bg-black/5'}`}
@@ -64,25 +77,47 @@ export default function TrackRow({
           <NeoText variant="caption" className="font-black text-sm">{song.track || index + 1}</NeoText>
         )}
       </View>
-      <View className="flex-1 mr-4">
-        <NeoText variant="body" numberOfLines={1} className="font-bold text-sm">
-          {song.title}
-        </NeoText>
-        {!!song.artist && (
+      
+      <View className="flex-1 mr-2">
+        <View className="flex-row items-center gap-1.5">
+          <NeoText variant="body" numberOfLines={1} className="font-bold text-sm flex-shrink">
+            {song.title}
+          </NeoText>
+          {isDownloaded && (
+            <HardDriveDownload color="#FFD93D" size={14} fill="black" />
+          )}
+        </View>
+        {!!(song.artist || fallbackArtist) && (
           <NeoText variant="caption" numberOfLines={1} className="font-bold text-xs opacity-60">
-            {song.artist}
+            {song.artist || fallbackArtist}
           </NeoText>
         )}
       </View>
-      <NeoText variant="caption" className="font-bold text-xs opacity-60 mr-4">
+
+      <NeoText variant="caption" className="font-bold text-xs opacity-60 mr-2">
         {formatDuration(song.duration)}
       </NeoText>
+
+      {showStarToggle && (
+        <Pressable
+          onPress={handleStarPress}
+          className="w-9 h-9 items-center justify-center active:opacity-60"
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        >
+          <Star
+            color="black"
+            size={18}
+            fill={isStarred ? '#FFD93D' : 'transparent'}
+          />
+        </Pressable>
+      )}
+
       <Pressable 
         onPress={() => {
           triggerHaptic();
           onMenuPress(mapToTrack());
         }} 
-        className="w-11 h-11 items-center justify-center -mr-2 active:opacity-60"
+        className="w-9 h-9 items-center justify-center -mr-2 active:opacity-60"
         hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
       >
         <MoreHorizontal color="black" size={20} />
@@ -90,4 +125,5 @@ export default function TrackRow({
     </Pressable>
   );
 }
+
 
