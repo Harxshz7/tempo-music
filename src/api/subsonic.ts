@@ -217,10 +217,67 @@ class SubsonicClient {
   }
 
   /** Get the streaming URL for a song */
-  getStreamUrl(id: string): string {
+  getStreamUrl(id: string, maxBitRate?: number): string {
     if (!this.config) throw new Error('No server configured.');
     const baseUrl = this.config.serverUrl.replace(/\/+$/, '');
-    return `${baseUrl}/rest/stream?id=${encodeURIComponent(id)}&u=${encodeURIComponent(this.config.username)}&t=${this.config.token}&s=${this.config.salt}&v=1.16.1&c=Tempo`;
+    let url = `${baseUrl}/rest/stream?id=${encodeURIComponent(id)}&u=${encodeURIComponent(this.config.username)}&t=${this.config.token}&s=${this.config.salt}&v=1.16.1&c=Tempo`;
+    if (maxBitRate && maxBitRate > 0) {
+      url += `&maxBitRate=${maxBitRate}`;
+    }
+    return url;
+  }
+
+  /** Star track(s), album(s), or artist(s) */
+  async star(id?: string, albumId?: string, artistId?: string): Promise<void> {
+    const params: Record<string, string> = {};
+    if (id) params.id = id;
+    if (albumId) params.albumId = albumId;
+    if (artistId) params.artistId = artistId;
+    await this.request('star', params);
+  }
+
+  /** Unstar track(s), album(s), or artist(s) */
+  async unstar(id?: string, albumId?: string, artistId?: string): Promise<void> {
+    const params: Record<string, string> = {};
+    if (id) params.id = id;
+    if (albumId) params.albumId = albumId;
+    if (artistId) params.artistId = artistId;
+    await this.request('unstar', params);
+  }
+
+  /** Scrobble a track */
+  async scrobble(id: string, submission = true): Promise<void> {
+    await this.request('scrobble', { id, submission, time: Date.now() });
+  }
+
+  /** Create a playlist */
+  async createPlaylist(name: string, songIds?: string[], playlistId?: string): Promise<Playlist> {
+    const params: Record<string, string | number | boolean> = { name };
+    if (playlistId) params.playlistId = playlistId;
+    
+    // Subsonic/Navidrome supports passing multiple songId params in query string.
+    // For axios, if we pass songId array or multiple parameters, we construct URL parameters.
+    let endpoint = 'createPlaylist';
+    if (songIds && songIds.length > 0) {
+      const songParams = songIds.map(id => `songId=${encodeURIComponent(id)}`).join('&');
+      const res = await this.request<{ playlist?: Playlist }>(`${endpoint}?${songParams}`, params);
+      return res.playlist || { id: playlistId || Date.now().toString(), name };
+    }
+
+    const res = await this.request<{ playlist?: Playlist }>(endpoint, params);
+    return res.playlist || { id: playlistId || Date.now().toString(), name };
+  }
+
+  /** Add songs to existing playlist */
+  async addSongsToPlaylist(playlistId: string, songIds: string[]): Promise<void> {
+    if (!songIds || songIds.length === 0) return;
+    const params = songIds.map(id => `songIdToAdd=${encodeURIComponent(id)}`).join('&');
+    await this.request(`updatePlaylist?playlistId=${encodeURIComponent(playlistId)}&${params}`);
+  }
+
+  /** Replace/Reorder tracks in a playlist by creating/updating playlist with full track list */
+  async replacePlaylistTracks(playlistId: string, name: string, songIds: string[]): Promise<void> {
+    await this.createPlaylist(name, songIds, playlistId);
   }
 
   /** Get all playlists */

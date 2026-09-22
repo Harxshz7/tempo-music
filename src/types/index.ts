@@ -1,5 +1,7 @@
 /** Server credentials stored in AsyncStorage */
 export interface ServerConfig {
+  id?: string;
+  name?: string;
   serverUrl: string;
   username: string;
   token: string;
@@ -61,6 +63,7 @@ export interface Playlist {
   duration?: number;
   created?: string;
   changed?: string;
+  coverArt?: string;
 }
 
 /** Subsonic API response wrapper */
@@ -104,3 +107,4 @@ export interface SearchResults {
   album?: { album: Album[] };
   song?: { song: Song[] };
 }
+
