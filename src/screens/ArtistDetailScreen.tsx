@@ -1,15 +1,13 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   SafeAreaView,
   FlatList,
   Image,
-  Animated,
-  useWindowDimensions,
   Pressable,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { ChevronLeft, Play, Shuffle } from 'lucide-react-native';
+import { ChevronLeft, Play, Shuffle, Star } from 'lucide-react-native';
 import subsonic from '../api/subsonic';
 import { useResponsive } from '../hooks/useResponsive';
 import { NeoText, NeoButton, NeoCard, NeoSkeleton } from '../components/ui';
@@ -17,7 +15,7 @@ import { usePlayerStore, Track } from '../store/playerStore';
 import AlbumGridItem from '../components/AlbumGridItem';
 import type { Artist, Album, Song } from '../types';
 import { triggerHaptic } from '../utils/haptics';
-
+import { useStarredStore } from '../store/starredStore';
 
 export default function ArtistDetailScreen() {
   const navigation = useNavigation<any>();
@@ -31,6 +29,9 @@ export default function ArtistDetailScreen() {
   const [error, setError] = useState<string | null>(null);
 
   const { setQueue } = usePlayerStore();
+
+  const isStarred = useStarredStore((state) => state.isArtistStarred(artistId, artist?.starred));
+  const toggleStarArtist = useStarredStore((state) => state.toggleStarArtist);
 
   const loadData = async () => {
     try {
@@ -64,7 +65,6 @@ export default function ArtistDetailScreen() {
   };
 
   const fetchAllTracks = async (): Promise<Track[]> => {
-    // For large discographies, fetching all albums can be slow, but this is the simplest way.
     let allTracks: Track[] = [];
     for (const album of albums) {
       try {
@@ -149,7 +149,7 @@ export default function ArtistDetailScreen() {
 
     return (
       <View className="items-center px-4 pt-4 pb-8">
-        <View className="self-start w-full">
+        <View className="flex-row items-center justify-between w-full">
           <Pressable 
             onPress={() => {
               triggerHaptic();
@@ -159,6 +159,20 @@ export default function ArtistDetailScreen() {
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
             <ChevronLeft color="black" size={32} />
+          </Pressable>
+
+          <Pressable
+            onPress={() => {
+              triggerHaptic();
+              toggleStarArtist(artistId, isStarred);
+            }}
+            className="w-11 h-11 items-center justify-center -mr-2 active:opacity-60"
+          >
+            <Star
+              color="black"
+              size={26}
+              fill={isStarred ? '#FFD93D' : 'transparent'}
+            />
           </Pressable>
         </View>
         
@@ -183,7 +197,6 @@ export default function ArtistDetailScreen() {
             </>
           )}
         </View>
-
 
         <View className="flex-row items-center justify-center gap-3 mt-8 w-full max-w-md px-6 mb-8">
           <NeoButton 
@@ -248,3 +261,4 @@ export default function ArtistDetailScreen() {
     </SafeAreaView>
   );
 }
+

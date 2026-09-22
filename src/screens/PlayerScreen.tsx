@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
-import { View, Pressable, FlatList, SafeAreaView, ScrollView, PanResponder } from 'react-native';
+import { View, Pressable, FlatList, SafeAreaView, ScrollView, PanResponder, Alert } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming, Easing } from 'react-native-reanimated';
-import { ChevronDown, SkipBack, SkipForward, Play, Pause, Shuffle, Repeat, Trash2, ArrowUp, ArrowDown } from 'lucide-react-native';
+import { ChevronDown, SkipBack, SkipForward, Play, Pause, Shuffle, Repeat, Trash2, ArrowUp, ArrowDown, Star, Plus, HardDriveDownload } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
 import Svg, { Defs, Pattern, Circle, Rect } from 'react-native-svg';
 
@@ -9,8 +9,10 @@ import { usePlayerStore, Track } from '../store/playerStore';
 import { useAudioPlayer } from '../hooks/useAudioPlayer';
 import { useResponsive } from '../hooks/useResponsive';
 import { NeoText, NeoCard, NeoCoverArt } from '../components/ui';
-
+import { AddToPlaylistModal } from '../components';
 import { triggerHaptic } from '../utils/haptics';
+import { useStarredStore } from '../store/starredStore';
+import { offlineService } from '../services/offlineService';
 
 const MechButton = ({ children, onPress, className, shadowClassName = "bg-black w-full h-full", hideBorder = false }: any) => {
   const isPressed = useSharedValue(false);
@@ -74,6 +76,8 @@ export default function PlayerScreen() {
   const [isScrubbing, setIsScrubbing] = useState(false);
   const [scrubPositionMillis, setScrubPositionMillis] = useState<number | null>(null);
 
+  const [isAddToPlaylistVisible, setIsAddToPlaylistVisible] = useState(false);
+
   const { isWide } = useResponsive();
   const {
     currentTrack,
@@ -95,6 +99,9 @@ export default function PlayerScreen() {
   } = usePlayerStore();
 
   const { play, pause, seek } = useAudioPlayer();
+
+  const isStarred = useStarredStore((state) => currentTrack ? state.isSongStarred(currentTrack.id) : false);
+  const toggleStarSong = useStarredStore((state) => state.toggleStarSong);
 
   const validDuration = durationMillis > 0 && isFinite(durationMillis) 
     ? durationMillis 
@@ -153,6 +160,11 @@ export default function PlayerScreen() {
     } else {
       play();
     }
+  };
+
+  const handleToggleStar = () => {
+    if (!currentTrack) return;
+    toggleStarSong(currentTrack.id, isStarred);
   };
 
   if (!currentTrack) {
@@ -330,9 +342,26 @@ export default function PlayerScreen() {
         >
           <ChevronDown size={32} color="black" />
         </Pressable>
-        <NeoText variant="caption" className="font-bold uppercase tracking-widest text-center flex-1 ml-[-48px]">
+        <NeoText variant="caption" className="font-bold uppercase tracking-widest text-center flex-1">
           Now Playing
         </NeoText>
+        <View className="flex-row items-center gap-2">
+          <Pressable
+            onPress={handleToggleStar}
+            className="w-10 h-10 items-center justify-center border-2 border-black bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:opacity-60"
+          >
+            <Star color="black" size={20} fill={isStarred ? '#FFD93D' : 'transparent'} />
+          </Pressable>
+          <Pressable
+            onPress={() => {
+              triggerHaptic();
+              setIsAddToPlaylistVisible(true);
+            }}
+            className="w-10 h-10 items-center justify-center border-2 border-black bg-neo-secondary shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:opacity-60"
+          >
+            <Plus color="black" size={20} />
+          </Pressable>
+        </View>
       </View>
 
       {isWide ? (
@@ -394,13 +423,21 @@ export default function PlayerScreen() {
           </View>
 
           {/* Track Info */}
-          <View className="px-8 mt-10 w-full">
-            <NeoText variant="h2" numberOfLines={1} ellipsizeMode="tail" className="font-black tracking-tight text-3xl">
-              {currentTrack.title}
-            </NeoText>
-            <NeoText variant="body" numberOfLines={1} ellipsizeMode="tail" className="font-bold uppercase text-base opacity-70 mt-1">
-              {currentTrack.artist}
-            </NeoText>
+          <View className="px-8 mt-10 w-full flex-row items-center justify-between">
+            <View className="flex-1 mr-4">
+              <NeoText variant="h2" numberOfLines={1} ellipsizeMode="tail" className="font-black tracking-tight text-3xl">
+                {currentTrack.title}
+              </NeoText>
+              <NeoText variant="body" numberOfLines={1} ellipsizeMode="tail" className="font-bold uppercase text-base opacity-70 mt-1">
+                {currentTrack.artist}
+              </NeoText>
+            </View>
+            <Pressable
+              onPress={handleToggleStar}
+              className="w-12 h-12 border-2 border-black bg-white items-center justify-center shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:opacity-60"
+            >
+              <Star color="black" size={24} fill={isStarred ? '#FFD93D' : 'transparent'} />
+            </Pressable>
           </View>
 
           {/* Scrubber */}
@@ -419,6 +456,18 @@ export default function PlayerScreen() {
           </View>
         </ScrollView>
       )}
+
+      <AddToPlaylistModal
+        visible={isAddToPlaylistVisible}
+        onClose={() => setIsAddToPlaylistVisible(false)}
+        songsToAdd={currentTrack ? [{
+          id: currentTrack.id,
+          title: currentTrack.title,
+          artist: currentTrack.artist,
+          duration: currentTrack.duration,
+        }] : []}
+      />
     </SafeAreaView>
   );
 }
+

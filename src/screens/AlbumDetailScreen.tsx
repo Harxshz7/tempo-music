@@ -1,24 +1,23 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   SafeAreaView,
   FlatList,
   Image,
   Pressable,
-  Animated,
-  ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { ChevronLeft, Play, Shuffle, MoreHorizontal, Music2 } from 'lucide-react-native';
+import { ChevronLeft, Play, Shuffle, MoreHorizontal, Music2, Star, HardDriveDownload, Plus } from 'lucide-react-native';
 import subsonic from '../api/subsonic';
 import { useResponsive } from '../hooks/useResponsive';
 import { NeoText, NeoButton, NeoCard, NeoSkeleton } from '../components/ui';
 import { usePlayerStore, Track } from '../store/playerStore';
-import { TrackRow } from '../components';
-import { TRACK_ROW_HEIGHT } from '../components/TrackRow';
+import { TrackRow, AddToPlaylistModal } from '../components';
 import type { Album, Song } from '../types';
 import { triggerHaptic } from '../utils/haptics';
-
+import { useStarredStore } from '../store/starredStore';
+import { offlineService } from '../services/offlineService';
 
 export default function AlbumDetailScreen() {
   const navigation = useNavigation<any>();
@@ -31,7 +30,13 @@ export default function AlbumDetailScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const { currentTrack, setQueue, queue } = usePlayerStore();
+  const [addToPlaylistSongs, setAddToPlaylistSongs] = useState<Song[]>([]);
+  const [isAddToPlaylistVisible, setIsAddToPlaylistVisible] = useState(false);
+
+  const { currentTrack, setQueue } = usePlayerStore();
+  
+  const isStarred = useStarredStore((state) => state.isAlbumStarred(albumId, album?.starred));
+  const toggleStarAlbum = useStarredStore((state) => state.toggleStarAlbum);
 
   const loadData = async () => {
     try {
@@ -71,7 +76,6 @@ export default function AlbumDetailScreen() {
 
   const handleShuffle = () => {
     const tracks = mapToTracks(songs);
-    // Fisher-Yates shuffle
     const shuffled = [...tracks];
     for (let i = shuffled.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
@@ -86,14 +90,44 @@ export default function AlbumDetailScreen() {
   };
 
   const handleTrackMenu = (track: Track) => {
-    // A full implementation would show an ActionSheet or Custom Modal
-    // For now, we'll just add to queue as a fallback, or simple alert.
-    // Given the prompt: "opens a simple action sheet/menu ... that modify playerStore.queue"
-    // Since we don't have a complex popover built, we can just append it for now, 
-    // or we'll need to expand the store to support add to queue / play next.
-    // Wait, the prompt says "opens a simple action sheet/menu ... with 'Play Next' and 'Add to Queue' options"
-    // We can use the native Alert for simplicity if we don't have a modal, but let's build a quick custom one or leave a comment.
-    // I'll add the store functions below.
+    const song = songs.find((s) => s.id === track.id);
+    if (!song) return;
+
+    Alert.alert('Track Options', track.title, [
+      {
+        text: 'Add to Playlist',
+        onPress: () => {
+          setAddToPlaylistSongs([song]);
+          setIsAddToPlaylistVisible(true);
+        },
+      },
+      {
+        text: 'Download Track',
+        onPress: () => offlineService.downloadTrack(song),
+      },
+      { text: 'Cancel', style: 'cancel' },
+    ]);
+  };
+
+  const handleHeaderMenu = () => {
+    Alert.alert('Album Options', album?.name, [
+      {
+        text: isStarred ? 'Unstar Album' : 'Star Album',
+        onPress: () => toggleStarAlbum(albumId, isStarred),
+      },
+      {
+        text: 'Download Full Album',
+        onPress: () => offlineService.downloadAlbum(albumId),
+      },
+      {
+        text: 'Add Album to Playlist',
+        onPress: () => {
+          setAddToPlaylistSongs(songs);
+          setIsAddToPlaylistVisible(true);
+        },
+      },
+      { text: 'Cancel', style: 'cancel' },
+    ]);
   };
 
   const formatDuration = (seconds: number) => {
@@ -149,7 +183,7 @@ export default function AlbumDetailScreen() {
     
     return (
       <View className="items-center px-4 pt-4 pb-8">
-        <View className="self-start w-full">
+        <View className="flex-row items-center justify-between w-full">
           <Pressable 
             onPress={() => {
               triggerHaptic();
@@ -160,6 +194,33 @@ export default function AlbumDetailScreen() {
           >
             <ChevronLeft color="black" size={32} />
           </Pressable>
+
+          <View className="flex-row items-center gap-2">
+            <Pressable
+              onPress={() => {
+                triggerHaptic();
+                toggleStarAlbum(albumId, isStarred);
+              }}
+              className="w-11 h-11 items-center justify-center active:opacity-60"
+            >
+              <Star
+                color="black"
+                size={26}
+                fill={isStarred ? '#FFD93D' : 'transparent'}
+              />
+            </Pressable>
+
+            <Pressable
+              onPress={() => {
+                triggerHaptic();
+                handleHeaderMenu();
+              }}
+              className="w-11 h-11 items-center justify-center -mr-2"
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <MoreHorizontal color="black" size={28} />
+            </Pressable>
+          </View>
         </View>
         
         <View className="w-48 sm:w-60 aspect-square border-4 border-black -rotate-1 shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] bg-neo-muted mb-8 relative">
@@ -243,8 +304,15 @@ export default function AlbumDetailScreen() {
             <NeoButton label="RETRY" onPress={loadData} />
           </View>
         )}
+
+        <AddToPlaylistModal
+          visible={isAddToPlaylistVisible}
+          onClose={() => setIsAddToPlaylistVisible(false)}
+          songsToAdd={addToPlaylistSongs}
+        />
       </View>
     </SafeAreaView>
   );
 }
+
 
