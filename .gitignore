@@ -46,6 +46,7 @@ expo-env.d.ts
 node_modules/.cache/
 *.tsbuildinfo
 *.tmp
+scratch/
 
 # Testing & Coverage
 coverage/
