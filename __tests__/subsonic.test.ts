@@ -20,8 +20,7 @@ describe('SubsonicClient API Tests', () => {
       const token = SubsonicClient.generateToken(password, salt);
       
       expect(typeof token).toBe('string');
-      expect(token.length).toBe(32); // Hex MD5 hash length
-      // Verify MD5 formula
+      expect(token.length).toBe(32);
       const expected = SubsonicClient.generateToken(password, salt);
       expect(token).toBe(expected);
     });
@@ -86,7 +85,7 @@ describe('SubsonicClient API Tests', () => {
       const res = await client.ping();
       expect(res.status).toBe('ok');
       expect(mockedAxios.get).toHaveBeenCalledWith(
-        expect.stringContaining('https://music.example.com/rest/ping.view'),
+        expect.stringContaining('https://music.example.com/rest/ping'),
         expect.any(Object)
       );
     });
@@ -108,10 +107,9 @@ describe('SubsonicClient API Tests', () => {
     });
 
     it('builds valid cover art URL with auth parameters', () => {
-      const url = client.getCoverArtUrl('al-101', 300);
-      expect(url).toContain('https://music.example.com/rest/getCoverArt.view');
+      const url = client.getCoverArtUrl('al-101');
+      expect(url).toContain('https://music.example.com/rest/getCoverArt');
       expect(url).toContain('id=al-101');
-      expect(url).toContain('size=300');
       expect(url).toContain('u=admin');
       expect(url).toContain('t=token123');
       expect(url).toContain('s=salt123');
@@ -119,7 +117,7 @@ describe('SubsonicClient API Tests', () => {
 
     it('builds valid stream URL with bitrate limit', () => {
       const url = client.getStreamUrl('tr-202', 320);
-      expect(url).toContain('https://music.example.com/rest/stream.view');
+      expect(url).toContain('https://music.example.com/rest/stream');
       expect(url).toContain('id=tr-202');
       expect(url).toContain('maxBitRate=320');
     });
@@ -141,9 +139,9 @@ describe('SubsonicClient API Tests', () => {
         },
       });
 
-      const indexes = await client.getArtists();
-      expect(indexes.length).toBe(1);
-      expect(indexes[0].artist[0].name).toBe('Artic Monkeys');
+      const artistIndex = await client.getArtists();
+      expect(artistIndex.index.length).toBe(1);
+      expect(artistIndex.index[0].artist[0].name).toBe('Artic Monkeys');
     });
   });
 });

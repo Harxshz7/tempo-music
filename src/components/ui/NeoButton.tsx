@@ -45,6 +45,9 @@ export function NeoButton({ label, variant = 'primary', fullWidth, className, ic
           getBgColor(),
           className
         )}
+        accessibilityRole="button"
+        accessibilityLabel={label || props.accessibilityLabel}
+        accessibilityHint={props.accessibilityHint}
         {...props}
       >
         {icon}

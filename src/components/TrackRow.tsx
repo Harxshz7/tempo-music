@@ -69,6 +69,9 @@ export default function TrackRow({
     <Pressable 
       className={`flex-row items-center px-4 py-3 min-h-[56px] border-b-2 border-black active:opacity-70 ${isPlaying ? 'bg-neo-secondary/30' : 'bg-transparent active:bg-black/5'}`}
       onPress={handlePress}
+      accessibilityRole="button"
+      accessibilityLabel={`Play ${song.title} by ${song.artist || fallbackArtist || 'Unknown'}`}
+      accessibilityHint="Double tap to play track"
     >
       <View className="w-8 items-center justify-center mr-2">
         {isPlaying ? (
@@ -103,6 +106,9 @@ export default function TrackRow({
           onPress={handleStarPress}
           className="w-9 h-9 items-center justify-center active:opacity-60"
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          accessibilityRole="button"
+          accessibilityLabel={isStarred ? `Unstar ${song.title}` : `Star ${song.title}`}
+          accessibilityHint="Toggles favorite status"
         >
           <Star
             color="black"
@@ -119,6 +125,9 @@ export default function TrackRow({
         }} 
         className="w-9 h-9 items-center justify-center -mr-2 active:opacity-60"
         hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        accessibilityRole="button"
+        accessibilityLabel={`More options for ${song.title}`}
+        accessibilityHint="Opens track context menu"
       >
         <MoreHorizontal color="black" size={20} />
       </Pressable>
