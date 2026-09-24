@@ -8,6 +8,7 @@ import { NeoText, NeoCoverArt } from './ui';
 import { useNavigation } from '@react-navigation/native';
 
 import { triggerHaptic } from '../utils/haptics';
+import { coverArtUrlFor } from '../utils';
 
 // Animated Pressable for mechanical button feel
 const MechButton = ({ children, onPress, className, iconColor = "#000" }: any) => {
@@ -104,7 +105,7 @@ export function NeoPlayerBar() {
            {/* Static Shadow */}
            <View className="absolute top-[3px] left-[3px] w-[52px] h-[52px] bg-black -rotate-2" />
            <NeoCoverArt
-             url={currentTrack.coverArtUrl}
+             url={coverArtUrlFor(currentTrack.coverArtId)}
              className="w-[52px] h-[52px] -rotate-2"
              imageClassName="w-full h-full border-[3px] border-black bg-neo-muted"
              fallbackIconSize={24}

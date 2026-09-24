@@ -11,6 +11,7 @@ import { useResponsive } from '../hooks/useResponsive';
 import { NeoText, NeoCard, NeoCoverArt } from '../components/ui';
 import { AddToPlaylistModal } from '../components';
 import { triggerHaptic } from '../utils/haptics';
+import { coverArtUrlFor } from '../utils';
 import { useStarredStore } from '../store/starredStore';
 import { offlineService } from '../services/offlineService';
 
@@ -267,9 +268,9 @@ export default function PlayerScreen() {
           const absoluteIndex = queueIndex + 1 + index;
           return (
             <NeoCard noShadow className="flex-row items-center p-2 mb-3 bg-neo-bg border-4 border-black">
-              <Pressable onPress={() => playTrack(item)} className="flex-row items-center flex-1 mr-2">
+              <Pressable onPress={() => playTrack(item, absoluteIndex)} className="flex-row items-center flex-1 mr-2">
                 <NeoCoverArt 
-                  url={item.coverArtUrl}
+                  url={coverArtUrlFor(item.coverArtId)}
                   className="w-11 h-11 border-2 border-black"
                   fallbackIconSize={20}
                 />
@@ -371,7 +372,7 @@ export default function PlayerScreen() {
           <View className="w-[48%] bg-white border-4 border-black p-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] items-center justify-between">
             <View className="w-64 h-64 border-4 border-black -rotate-1 relative shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] bg-neo-muted">
               <NeoCoverArt 
-                url={currentTrack.coverArtUrl}
+                url={coverArtUrlFor(currentTrack.coverArtId)}
                 className="w-full h-full"
                 fallbackIconSize={64}
               />
@@ -410,7 +411,7 @@ export default function PlayerScreen() {
             <View className="w-[80%] max-w-[320px] aspect-square relative -rotate-1">
               <View className="absolute top-[12px] left-[12px] right-[-12px] bottom-[-12px] bg-black" />
               <NeoCoverArt 
-                url={currentTrack.coverArtUrl}
+                url={coverArtUrlFor(currentTrack.coverArtId)}
                 className="w-full h-full border-4 border-black"
                 fallbackIconSize={80}
               />

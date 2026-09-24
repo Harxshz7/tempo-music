@@ -49,9 +49,10 @@ export default function TrackRow({
       id: song.id,
       title: song.title,
       artist: song.artist || fallbackArtist || 'Unknown',
-      coverArtUrl: song.coverArt ? subsonic.getCoverArtUrl(song.coverArt) : albumArtUrl,
-      streamUrl: subsonic.getStreamUrl(song.id),
+      coverArtId: song.coverArt,
       duration: song.duration || 0,
+      albumId: song.albumId,
+      artistId: song.artistId,
     };
   };
 
