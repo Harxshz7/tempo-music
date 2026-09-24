@@ -14,13 +14,13 @@ import Svg, { Defs, Pattern, Circle, Rect } from 'react-native-svg';
 import { cacheDirectory, readDirectoryAsync, getInfoAsync, deleteAsync } from 'expo-file-system/legacy';
 import Constants from 'expo-constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Server, Moon, Sun, Music, HardDrive, Radio, Plus, Check, Trash2 } from 'lucide-react-native';
+import { Server, Music, HardDrive, Radio, Plus, Check, Trash2 } from 'lucide-react-native';
 import subsonic, { SubsonicClient } from '../api/subsonic';
 import { useAuthStore } from '../store/authStore';
 import { usePlayerStore } from '../store/playerStore';
 import { useResponsive } from '../hooks/useResponsive';
 import { NeoText, NeoButton, NeoCard, NeoBadge, NeoSwitch, NeoInput } from '../components/ui';
-import { useSettingsStore, AudioBitrate, ThemeMode } from '../store/settingsStore';
+import { useSettingsStore, AudioBitrate } from '../store/settingsStore';
 import { offlineService } from '../services/offlineService';
 import type { ServerConfig } from '../types';
 import { triggerHaptic } from '../utils/haptics';
@@ -45,8 +45,6 @@ export default function SettingsScreen() {
   const { containerClass } = useResponsive();
 
   const {
-    themeMode,
-    setThemeMode,
     audioBitrate,
     setAudioBitrate,
     savedServers,
@@ -54,11 +52,6 @@ export default function SettingsScreen() {
     removeSavedServer,
     subsonicScrobbleEnabled,
     setSubsonicScrobbleEnabled,
-    lastfmScrobbleEnabled,
-    setLastfmScrobbleEnabled,
-    lastfmApiKey,
-    lastfmSessionKey,
-    setLastfmCredentials,
   } = useSettingsStore();
 
   const [serverStatus, setServerStatus] = useState<'checking' | 'ok' | 'error'>('checking');
@@ -73,11 +66,6 @@ export default function SettingsScreen() {
   const [newUsername, setNewUsername] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [isAddingServer, setIsAddingServer] = useState(false);
-
-  // Last.fm modal state
-  const [showLastfmModal, setShowLastfmModal] = useState(false);
-  const [tempLastfmKey, setTempLastfmKey] = useState(lastfmApiKey);
-  const [tempLastfmSecret, setTempLastfmSecret] = useState(lastfmSessionKey);
 
   useFocusEffect(
     useCallback(() => {
@@ -229,7 +217,7 @@ export default function SettingsScreen() {
         text: 'Log Out',
         style: 'destructive',
         onPress: async () => {
-          usePlayerStore.setState({ queue: [], currentTrack: null, isPlaying: false, positionMillis: 0, durationMillis: 0 });
+          usePlayerStore.getState().clearQueue();
           await logout();
           navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
         },
@@ -273,47 +261,6 @@ export default function SettingsScreen() {
               SETTINGS
             </NeoText>
           </View>
-
-          {/* THEME TOGGLE */}
-          <NeoCard className="bg-white p-0 mb-6 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
-            <View className="p-4 border-b-4 border-black">
-              <NeoText className="font-black uppercase text-xs tracking-widest">THEME & APPEARANCE</NeoText>
-            </View>
-            <View className="p-4 flex-row justify-between items-center">
-              <View className="flex-1 mr-4">
-                <NeoText className="font-bold text-sm">Color Mode</NeoText>
-                <NeoText variant="caption" className="font-medium text-xs opacity-60 mt-0.5">
-                  Neo-Brutalist Light / Dark theme contrast
-                </NeoText>
-              </View>
-              <View className="flex-row border-2 border-black bg-neo-bg">
-                <Pressable
-                  onPress={() => {
-                    triggerHaptic();
-                    setThemeMode('light');
-                  }}
-                  className={`px-3 py-1.5 flex-row items-center gap-1 ${
-                    themeMode === 'light' ? 'bg-neo-secondary' : 'bg-white'
-                  }`}
-                >
-                  <Sun color="black" size={16} />
-                  <NeoText className="font-black text-xs">LIGHT</NeoText>
-                </Pressable>
-                <Pressable
-                  onPress={() => {
-                    triggerHaptic();
-                    setThemeMode('dark');
-                  }}
-                  className={`px-3 py-1.5 flex-row items-center gap-1 border-l-2 border-black ${
-                    themeMode === 'dark' ? 'bg-neo-secondary' : 'bg-white'
-                  }`}
-                >
-                  <Moon color="black" size={16} />
-                  <NeoText className="font-black text-xs">DARK</NeoText>
-                </Pressable>
-              </View>
-            </View>
-          </NeoCard>
 
           {/* SERVER SECTION */}
           <NeoCard className="bg-white p-0 mb-6 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
@@ -422,7 +369,7 @@ export default function SettingsScreen() {
               <NeoText className="font-black uppercase text-xs tracking-widest">SCROBBLING</NeoText>
             </View>
 
-            <View className="p-4 flex-row justify-between items-center border-b-2 border-black/20">
+            <View className="p-4 flex-row justify-between items-center">
               <View className="flex-1 mr-4">
                 <NeoText className="font-bold text-sm">Subsonic Native Scrobble</NeoText>
                 <NeoText variant="caption" className="font-medium text-xs opacity-60 mt-0.5">
@@ -437,36 +384,6 @@ export default function SettingsScreen() {
                 }}
               />
             </View>
-
-            <View className="p-4 flex-row justify-between items-center">
-              <View className="flex-1 mr-4">
-                <NeoText className="font-bold text-sm">Last.fm Scrobble</NeoText>
-                <NeoText variant="caption" className="font-medium text-xs opacity-60 mt-0.5">
-                  Scrobble tracks to Last.fm (requires user credentials)
-                </NeoText>
-              </View>
-              <NeoSwitch
-                value={lastfmScrobbleEnabled}
-                onValueChange={(val) => {
-                  triggerHaptic();
-                  if (val && (!lastfmApiKey || !lastfmSessionKey)) {
-                    setShowLastfmModal(true);
-                  }
-                  setLastfmScrobbleEnabled(val);
-                }}
-              />
-            </View>
-
-            {lastfmScrobbleEnabled && (
-              <View className="px-4 pb-4">
-                <NeoButton
-                  label="CONFIGURE LAST.FM CREDENTIALS"
-                  variant="ghost"
-                  className="border-2 border-black h-10"
-                  onPress={() => setShowLastfmModal(true)}
-                />
-              </View>
-            )}
           </NeoCard>
 
           {/* STORAGE & OFFLINE MANAGEMENT */}
@@ -602,43 +519,6 @@ export default function SettingsScreen() {
           </Pressable>
         </Modal>
 
-        {/* LAST.FM MODAL */}
-        <Modal visible={showLastfmModal} transparent animationType="fade" onRequestClose={() => setShowLastfmModal(false)}>
-          <Pressable className="flex-1 justify-center items-center bg-black/60 px-4" onPress={() => setShowLastfmModal(false)}>
-            <Pressable className="w-full max-w-md" onPress={(e) => e.stopPropagation()}>
-              <NeoCard className="p-6 bg-neo-bg shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] border-4 border-black">
-                <NeoText variant="h2" className="font-black uppercase text-xl mb-4">
-                  LAST.FM SCROBBLE CREDENTIALS
-                </NeoText>
-
-                <NeoInput
-                  placeholder="API KEY"
-                  value={tempLastfmKey}
-                  onChangeText={setTempLastfmKey}
-                />
-                <View className="h-3" />
-                <NeoInput
-                  placeholder="SESSION KEY"
-                  value={tempLastfmSecret}
-                  onChangeText={setTempLastfmSecret}
-                />
-
-                <View className="flex-row justify-end mt-4 gap-3">
-                  <NeoButton label="CANCEL" variant="ghost" onPress={() => setShowLastfmModal(false)} />
-                  <NeoButton
-                    label="SAVE"
-                    variant="primary"
-                    onPress={() => {
-                      setLastfmCredentials(tempLastfmKey.trim(), tempLastfmSecret.trim());
-                      setShowLastfmModal(false);
-                      showToast('Last.fm credentials saved', 'success');
-                    }}
-                  />
-                </View>
-              </NeoCard>
-            </Pressable>
-          </Pressable>
-        </Modal>
       </View>
     </SafeAreaView>
   );

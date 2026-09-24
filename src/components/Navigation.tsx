@@ -15,8 +15,6 @@ import PlayerScreen from '../screens/PlayerScreen';
 import AlbumDetailScreen from '../screens/AlbumDetailScreen';
 import ArtistDetailScreen from '../screens/ArtistDetailScreen';
 import PlaylistDetailScreen from '../screens/PlaylistDetailScreen';
-// SPIKE-ONLY — remove before merge
-import AudioSpikeScreen from '../screens/AudioSpikeScreen';
 
 import { useResponsive } from '../hooks/useResponsive';
 import DesktopSidebar from '../navigation/DesktopSidebar';
@@ -103,14 +101,10 @@ export default function Navigation() {
                   animationDuration: 250,
                 }} 
               />
-              {/* SPIKE-ONLY — remove before merge */}
-              <Stack.Screen name="AudioSpike" component={AudioSpikeScreen} />
             </>
           ) : (
             <>
               <Stack.Screen name="Login" component={LoginScreen} />
-              {/* SPIKE-ONLY — accessible without login for quick testing */}
-              <Stack.Screen name="AudioSpike" component={AudioSpikeScreen} />
             </>
           )}
         </Stack.Navigator>
