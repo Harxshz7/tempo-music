@@ -95,7 +95,9 @@ tempo-music/
 │   ├── store/                 # Zustand stores — auth + persisted player queue
 │   ├── services/
 │   │   ├── audioService.ts    # expo-audio playback engine (singleton)
+│   │   ├── audioBridge.ts     # store → engine hooks (avoids an import cycle)
 │   │   ├── cacheService.ts    # disk cache for artwork
+│   │   ├── offlineService.ts  # downloads + persisted offline store
 │   │   └── toast.ts           # global toast notifications
 │   ├── hooks/                 # useAudioPlayer, useDebounce, useResponsive
 │   ├── components/
@@ -105,14 +107,14 @@ tempo-music/
 │   ├── screens/               # Login, Library, Search, Player, detail screens
 │   ├── navigation/            # DesktopSidebar (> 1024 px)
 │   ├── types/                 # Subsonic API response types
-│   └── utils/                 # haptics helper
+│   └── utils/                 # haptics + cover-art URL helper
 ├── docs/
 │   ├── spike-expo-audio.md    # audio migration evaluation + device test matrices
 │   └── screenshots/           # screenshot plan
 └── .github/workflows/ci.yml   # typecheck on every push/PR
 ```
 
-**Data flow:** screens call the `subsonic` API singleton → results map into `playerStore` (Zustand) → `useAudioPlayer` keeps the store and the `expo-audio` player in sync. Queue, playback position, and repeat/shuffle settings persist to AsyncStorage.
+**Data flow:** screens call the `subsonic` API singleton → results map into `playerStore` (Zustand) → `useAudioPlayer` keeps the store and the `expo-audio` player in sync (the store reaches playback restart/teardown through `src/services/audioBridge.ts`). The queue, the repeat/shuffle preference and a playback checkpoint persist to AsyncStorage; the live playback position is runtime-only and is checkpointed on pause, track change and unmount.
 
 ## Tech Stack
 
@@ -131,6 +133,7 @@ Tempo talks directly to *your* server — there is no Tempo backend, no analytic
 - **Your password is never stored.** Login uses the Subsonic token scheme: each login generates a random salt and sends `MD5(password + salt)` as the token. Only the resulting server URL, username, token, and salt are saved — in device AsyncStorage.
 - **Use HTTPS.** The saved token + salt pair is replayable: anyone who captures it can make API requests as you **until you change your password**. Over plain HTTP (including LAN traffic) capture is trivial; over HTTPS it's infeasible. If your server is HTTP-only on your LAN, be aware every stored credential pair stays valid indefinitely.
 - **AsyncStorage is not encrypted at rest.** On a rooted/jailbroken or forensically examined device, the saved credentials can be extracted. Use a strong, unique server password to limit the blast radius.
+- **Media URLs are not persisted.** Subsonic stream and cover-art URLs embed the token, so Tempo derives them on demand and saves only the cover-art id — your saved queue never contains the auth token.
 - **Your server URL, username, and config are visible in Settings** — treat a shared/descended device accordingly, and use **Log Out** (Settings) to clear them.
 
 ## Known Limitations

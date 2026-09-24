@@ -16,8 +16,10 @@ const sampleTracks: Track[] = [
 
 describe('usePlayerStore State Management', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
     usePlayerStore.getState().clearQueue();
+    // `repeat` is a player preference, not queue state, so clearQueue
+    // deliberately leaves it alone — reset it explicitly for isolation.
+    usePlayerStore.setState({ repeat: 'off' });
     jest.clearAllMocks();
   });
 

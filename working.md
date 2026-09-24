@@ -28,7 +28,7 @@ Tempo is a cross-platform mobile and web music streaming client built with React
 │  - authStore                     │ │  - audioService (expo-audio)│
 │  - playerStore                   │ │  - offlineService           │
 │  - starredStore                  │ │  - cacheService             │
-│  - settingsStore                 │ │  - notificationPlayer       │
+│  - settingsStore                 │ │  - audioBridge              │
 │  - playCountStore                │ └──────────────┬──────────────┘
 └─────────────────┬────────────────┘                │
                   │ AsyncStored                     │ HTTP Stream / File URI
@@ -54,7 +54,7 @@ Tempo is a cross-platform mobile and web music streaming client built with React
 * **Auth Protocol**: Implements Subsonic REST API token authentication using `u` (username), `t` (token), `s` (salt), `v` (`1.16.1`), and `c` (`TempoMusic`).
   * Token formula: `t = md5(password + salt)`.
   * `salt` is a randomly generated 6-character hex string generated per auth request.
-* **Credentials Storage**: Active credentials (`serverUrl`, `username`, `password`, `token`, `salt`) are managed by [`authStore.ts`](./src/store/authStore.ts) and persisted to `AsyncStorage` (`tempo_auth_storage`).
+* **Credentials Storage**: [`authStore.ts`](./src/store/authStore.ts) derives `token` = `md5(password + salt)` and hands `serverUrl`, `username`, `token` and `salt` to the Subsonic client, which persists them to `AsyncStorage` under `tempo_server_config`. The **password itself is never stored**. The token/salt pair is replayable and is also embedded in stream and cover-art URLs, so HTTPS matters.
 * **Endpoints Implemented**:
   * `ping.view`: Server connectivity & auth validation.
   * `getIndexes.view` / `getArtists.view` / `getArtist.view` / `getAlbum.view`: Music library browsing.
@@ -70,19 +70,21 @@ Tempo is a cross-platform mobile and web music streaming client built with React
 * **Key File**: [`src/services/audioService.ts`](./src/services/audioService.ts)
 * **Engine**: Built on Expo SDK 57 `expo-audio` API (`AudioPlayer` / `createAudioPlayer`).
 * **Playback Lifecycle**:
-  * `play(track)`: Resolves local offline file URI via [`offlineService.ts`](./src/services/offlineService.ts) if downloaded; otherwise builds remote `stream.view` URL via Subsonic API. Loads stream into `expo-audio` player, triggers `.play()`, and reports now-playing scrobble.
+  * `loadTrack(track, isPlaying, resumePositionMillis)`: Resolves a local offline file URI via [`offlineService.ts`](./src/services/offlineService.ts) when the track is downloaded, otherwise derives a `stream.view` URL from the track id at play time (stream URLs are never stored on tracks). Creates an `expo-audio` player, applies the resume position, and plays. A monotonically increasing load token discards stale in-flight loads so rapid track switches can't leave two players running.
+  * `replayCurrent()` / `unloadTrack()`: Restart-from-zero (repeat-one) and full teardown. The Zustand store reaches these through [`audioBridge.ts`](./src/services/audioBridge.ts) instead of importing the service, which would create a module cycle.
   * `pause()` / `resume()` / `seek(seconds)` / `stop()`: Directly controls the active player instance.
   * Status updates (position, duration, buffering, playback status) are emitted to [`playerStore.ts`](./src/store/playerStore.ts).
-* **Background Playback & Lock Screen Controls**: Handled via [`notificationPlayer.ts`](./src/services/notificationPlayer.ts) using `expo-notifications` and background audio category configuration in `app.json`.
+* **Background Playback & Lock Screen Controls**: Handled natively by `expo-audio` — `setAudioModeAsync({ shouldPlayInBackground: true })` plus `player.setActiveForLockScreen(...)` for MediaSession / Now Playing metadata. The config plugin in `app.json` enables background playback.
 
 ### 3. State Management & Persistence
 * **Library**: [Zustand](./src/store) with `JSON.stringify` / `AsyncStorage` persistence adapters.
 * **Stores**:
-  * **[`authStore.ts`](./src/store/authStore.ts)**: Server URL, credentials, token, authentication status (`tempo_auth_storage`).
-  * **[`playerStore.ts`](./src/store/playerStore.ts)**: Current track, queue array, queue index, play state (`isPlaying`), position/duration, volume, repeat mode (`off` | `one` | `all`), and shuffle mode (`tempo_player_storage`).
-  * **[`starredStore.ts`](./src/store/starredStore.ts)**: Starred tracks, albums, and artists synced with Subsonic server (`tempo_starred_storage`).
-  * **[`settingsStore.ts`](./src/store/settingsStore.ts)**: Max bitrate quality, transcode format, theme mode, cache size limit, offline-only mode (`tempo_settings_storage`).
-  * **[`playCountStore.ts`](./src/store/playCountStore.ts)**: Local play counters per track ID (`tempo_playcount_storage`).
+  * **[`authStore.ts`](./src/store/authStore.ts)**: Authentication status and the active server config. The config itself is persisted by the API client under `tempo_server_config`.
+  * **[`playerStore.ts`](./src/store/playerStore.ts)**: Current track, queue, queue index, `isPlaying`, repeat (`off` | `one` | `all`) and shuffle, persisted under `tempo-player-state`. `positionMillis` is runtime-only; `resumePositionMillis` is the persisted checkpoint, written on pause / track change / unmount through a de-duplicating storage adapter so position ticks don't re-serialize the queue.
+  * **[`starredStore.ts`](./src/store/starredStore.ts)**: Starred tracks, albums and artists with optimistic updates and rollback on failure, persisted under `tempo-starred-store`.
+  * **[`settingsStore.ts`](./src/store/settingsStore.ts)**: Streaming bitrate, saved servers and the Subsonic scrobble toggle, persisted under `tempo-settings-store`.
+  * **[`playCountStore.ts`](./src/store/playCountStore.ts)**: Local play counters per song/album/artist, persisted under `tempo-play-counts`.
+  * **`useOfflineStore`** (exported from [`offlineService.ts`](./src/services/offlineService.ts)): Download records and their statuses, persisted under `tempo-offline-store`.
 
 ### 4. Navigation & Layout Structure
 * **Key File**: [`src/components/Navigation.tsx`](./src/components/Navigation.tsx)
@@ -97,43 +99,51 @@ Tempo is a cross-platform mobile and web music streaming client built with React
 
 ## End-to-End Data Flow Example
 
-**Scenario: User taps a track in the Library screen to start playback**
+**Scenario: User taps a track on an album screen to start playback**
 
 ```
 1. [User Interaction]
-   User taps track item in LibraryScreen.tsx -> TrackRow.tsx fires onPress(track)
+   User taps a row in AlbumDetailScreen / PlaylistDetailScreen / SearchScreen -> TrackRow fires onPress
 
 2. [State Action]
-   LibraryScreen calls playerStore.getState().playTrack(track, queue)
+   The screen maps Song[] -> Track[] and calls playerStore.setQueue(tracks, index).
+   Rows inside "Up Next" call playerStore.playTrack(track, index) so the cursor moves too.
 
 3. [Store Update]
-   playerStore updates state:
-     - currentTrack = track
-     - queue = queue
-     - queueIndex = selected index
-     - isPlaying = true
-   Persists queue & currentTrack to AsyncStorage ('tempo_player_storage')
+   playerStore sets currentTrack, queue, queueIndex and isPlaying=true, and resets
+   positionMillis + resumePositionMillis to 0. Zustand persist writes the queue to
+   AsyncStorage ('tempo-player-state') through a de-duplicating storage adapter, so
+   position ticks do not cause disk writes.
 
 4. [Audio Engine Invocation]
-   playerStore calls audioService.play(track)
+   The mounted useAudioPlayer() hook reacts to the currentTrack id change and calls
+   audioService.loadTrack(currentTrack, isPlaying, resumePositionMillis).
+   The store never calls the audio service directly - it reaches it through
+   audioBridge for repeat-one replay and queue teardown.
 
 5. [Source Resolution]
-   audioService checks offlineService.isTrackDownloaded(track.id):
-     ├── IF downloaded: returns local URI ('file://.../downloaded_tracks/track_id.mp3')
-     └── ELSE: calls subsonic.getStreamUrl(track.id, maxBitrate) -> returns HTTPS URL
+   audioService asks offlineService.getAudioPlaybackUrl(track.id, remoteUrl):
+     ├── IF downloaded: local file URI
+     └── ELSE: subsonic.getStreamUrl(track.id, bitrate) -> HTTPS URL derived per play,
+              so no credential-bearing URL is ever stored on a track
 
-6. [Playback Execution & Scrobble]
-   audioService loads stream URI into expo-audio player and invokes .play()
-   Calls subsonic.scrobble(track.id, submission=false) to report 'now playing' to Subsonic server
+6. [Playback Execution]
+   A load token guards the async path: if another track is selected mid-load, the
+   stale load bails out and discards its player. The player is created, lock-screen
+   metadata is set, the resume position is applied, and .play() is called.
 
 7. [UI Reactivity]
-   Zustand subscriptions trigger re-renders:
-     - NeoPlayerBar.tsx displays track metadata, play/pause state, progress bar
-     - PlayerScreen.tsx updates album artwork, track title, artist, and full controls
+   The playbackStatusUpdate listener writes position/duration into the store and
+   reconciles isPlaying with the engine, keeping NeoPlayerBar, PlayerScreen and the
+   scrubbers in sync (including after OS interruptions).
 
 8. [Completion & Next Track]
-   When track position reaches 50% or 4 minutes, audioService calls subsonic.scrobble(track.id, submission=true)
-   On track finish, audioService checks repeat/shuffle mode and triggers playerStore.nextTrack()
+   A failure to load surfaces a toast. At 50% played a scrobble is submitted, but
+   only when Subsonic scrobbling is enabled in Settings (off by default). When the
+   engine reports didJustFinish, playerStore.playNext() runs: repeat-one re-seeks
+   the current track, otherwise the queue advances (or wraps under repeat-all).
+   On pause / track change / unmount the position is checkpointed to
+   resumePositionMillis for the next launch.
 ```
 
 ---
@@ -157,10 +167,12 @@ Tempo is a cross-platform mobile and web music streaming client built with React
 
 Based strictly on code inspection of current source files:
 
-1. **Queue Reordering UI**: [`playerStore.ts`](./src/store/playerStore.ts) implements `reorderQueue(fromIndex, toIndex)`, but drag-and-drop reordering gesture UI in [`PlayerScreen.tsx`](./src/screens/PlayerScreen.tsx) is not yet wired.
-2. **Equalizer & DSP**: [`settingsStore.ts`](./src/store/settingsStore.ts) contains an `equalizerPreset` state setting, but custom audio DSP processing is not implemented in [`audioService.ts`](./src/services/audioService.ts).
-3. **Synced Lyrics**: `subsonic.getLyrics()` fetches plain-text lyrics from Subsonic; time-synced LRCLIB lyric parsing is not yet implemented.
-4. **Debug Route**: [`src/screens/AudioSpikeScreen.tsx`](./src/screens/AudioSpikeScreen.tsx) remains registered in [`Navigation.tsx`](./src/components/Navigation.tsx#L18) (`// SPIKE-ONLY — remove before merge`).
+1. **Queue reordering is button-based only**: `playerStore.reorderQueue(fromIndex, toIndex)` is wired to the up/down buttons in [`PlayerScreen.tsx`](./src/screens/PlayerScreen.tsx); drag-and-drop is not implemented.
+2. **No gapless playback**: queued tracks advance in JavaScript when `expo-audio` reports `didJustFinish`, so there is an audible gap. `expo-audio`'s `AudioPlaylist` would have to own the queue to fix this.
+3. **No lyrics support**: there is no `getLyrics` call in [`subsonic.ts`](./src/api/subsonic.ts) and no lyrics UI.
+4. **Playlists are read-mostly**: rename, delete, remove-track and add-songs exist, but reordering rewrites the playlist via `createPlaylist` with the full track list.
+5. **Two Settings toggles are display-only**: `Background Playback` and `Download Over Wi-Fi Only` are written to AsyncStorage under `pref_bgPlayback` / `pref_wifiOnly` in [`SettingsScreen.tsx`](./src/screens/SettingsScreen.tsx) and never read anywhere else. Wire them to behaviour or remove them — they currently mislead the user.
+6. **Offline downloads have no lifecycle management**: no expiry, size cap or eviction; `removeAllDownloads` is the only cleanup path.
 
 ---
 

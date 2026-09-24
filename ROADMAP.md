@@ -16,13 +16,13 @@ This document outlines completed milestones, current priorities, and upcoming wo
 - [x] Subsonic REST API v1.16.1 client with MD5 salt authentication.
 - [x] Multi-server credential storage and session restoration via `AsyncStorage`.
 - [x] API endpoints for library browsing, album/artist metadata, playlist CRUD, and search.
-- [x] Server scrobble protocol (`nowPlaying` and submission scrobbles).
+- [x] Server scrobble protocol (submission scrobbles; a `nowPlaying` ping is not sent).
 
 ### Phase 2: Audio Engine & Playback Architecture ✅
 - [x] Playback engine built on Expo SDK 57 `expo-audio`.
 - [x] Global player state management via Zustand (`playerStore`).
 - [x] Persistent playback queue surviving app restarts.
-- [x] Lock-screen metadata and notification controls via `notificationPlayer.ts`.
+- [x] Lock-screen metadata and controls via `expo-audio`'s native MediaSession / Now Playing integration.
 - [x] Docked mini player (`NeoPlayerBar`) and fullscreen modal player (`PlayerScreen`).
 
 ### Phase 3: Library & Feature Completeness ✅
@@ -66,7 +66,7 @@ The following initiatives are open for contribution. If you'd like to work on on
 ### 4. Equalizer & Audio DSP Presets 🎛️
 * **Status**: `help-wanted`
 * **Priority**: Medium
-* **Details**: `settingsStore.ts` holds an `equalizerPreset` configuration state, but native audio frequency equalization is not yet wired to `expo-audio`.
+* **Details**: No equalizer state or native frequency filtering exists yet; this would need audio filter extensions on top of `expo-audio`.
 * **Skills Needed**: Native audio DSP or Expo audio filter extensions.
 
 ### 5. Smart Batch Offline Download Manager 💾

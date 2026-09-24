@@ -126,7 +126,7 @@ When contributing or triaging, Tempo uses the following labels:
 * `bug`: Confirmed bugs or regressions reproducible against a Subsonic server.
 * `enhancement`: Feature additions or improvements to existing functionality.
 * `needs-triage`: Newly submitted issues awaiting verification, reproduction steps, or maintainer categorization.
-* `audio`: Changes touching `audioService`, `notificationPlayer`, or background playback.
+* `audio`: Changes touching `audioService`, `audioBridge`, or background playback.
 * `ui-ux`: Changes touching the neo-brutalist component system or navigation layouts.
 
 ---

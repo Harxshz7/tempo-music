@@ -4,6 +4,12 @@
 **Date**: 2026-09-21
 **Author**: Tempo team
 **Timebox**: 2–3 days (spike only — no production changes)
+**Status**: ✅ Migration landed. This doc is kept as the historical record of the evaluation.
+`expo-av`, `expo-notifications` and `expo-task-manager` have been removed, and
+`src/services/notificationPlayer.ts` (the expo-notifications lock-screen workaround described
+below) has been deleted — `expo-audio` handles the lock screen natively. The throwaway
+`AudioSpikeScreen` test screen (section 8) has also been removed. The device test matrices in
+section 9 are still unfilled.
 
 ---
 
