@@ -9,7 +9,7 @@
 [![Platforms](https://img.shields.io/badge/platforms-iOS%20%7C%20Android%20%7C%20Web-lightgrey)](#getting-started)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](./LICENSE)
 
-> **Status:** early development (v0.1.0). Core playback and library browsing work end-to-end — see [Roadmap](#roadmap) for what's next. Expect changes between minor versions.
+> **Project Status:** Active development (v0.2.0). The core playback and library browsing work end-to-end. We are **actively seeking co-maintainers** to help steer the project alongside the original author. See [MAINTAINING.md](./MAINTAINING.md) for how we work and [ROADMAP.md](./ROADMAP.md) for what's planned.
 
 ## About
 
@@ -163,31 +163,35 @@ You're running in Expo Go. Build a dev client — see [Development Setup](#devel
 
 ## Roadmap
 
-Help welcome on all items — please open an issue first:
+For the detailed multi-phase roadmap and unclaimed community tasks, see [**ROADMAP.md**](./ROADMAP.md). Key items currently looking for contributors:
 
-- [ ] Physical-device verification of background audio & lock-screen controls (fill the matrices in [docs/spike-expo-audio.md](docs/spike-expo-audio.md))
-- [ ] "Play Next" and "Add to Queue" actions from track menus (menus exist but are stubbed today)
-- [ ] Gapless playback via `expo-audio`'s `useAudioPlaylist`
-- [ ] Adding songs to playlists (rename / delete / remove-tracks already work)
-- [ ] Extend disk caching to library grids (currently player-only)
-- [ ] Drop the unused `expo-av` dependency to finish the `expo-audio` migration cleanup
+- [ ] **Physical-device verification** of background audio & lock-screen controls (fill the matrices in [docs/spike-expo-audio.md](docs/spike-expo-audio.md))
+- [ ] **Drag-and-Drop Queue Reordering** gesture UI in the Player modal
+- [ ] **Synced lyrics** via LRCLIB or timestamped LRC format
+- [ ] **Equalizer & Audio DSP presets**
+- [ ] **Batch offline download manager** for full playlists & albums
 
-## Contributing
+## Contributing & Community
 
-Contributions are welcome! Please open an issue to discuss significant changes before submitting a PR.
+Contributions are warmly welcome! Whether you are reporting a bug, improving documentation, or submitting a PR:
 
-Before submitting, make sure both pass locally:
+1. Review our [**Contributing Guide**](./CONTRIBUTING.md) for local dev environment setup (including 1-command local Navidrome Docker setup).
+2. Check the [**Maintainer Guide**](./MAINTAINING.md) for how PRs are reviewed and releases are cut.
+3. Review our [**Code of Conduct**](./CODE_OF_CONDUCT.md).
+
+Before submitting a PR, make sure all verification checks pass locally:
 
 ```bash
-npm run typecheck
-npm run lint
+npm run typecheck   # TypeScript strict typechecking
+npm test            # Jest unit test suite
+npm run lint        # ESLint for Expo SDK 57
 ```
 
-CI runs the same checks on every push and PR. Keep new UI consistent with the existing Neo-brutalism design system — reuse the primitives in [`src/components/ui/`](src/components/ui/) rather than inventing new styles.
+CI runs these exact checks on every pull request.
 
 ## Changelog
 
-See [CHANGELOG.md](./CHANGELOG.md) — currently at **v0.1.0** (2026-09-21).
+See [CHANGELOG.md](./CHANGELOG.md) — currently at **v0.2.0**.
 
 ## License
 
