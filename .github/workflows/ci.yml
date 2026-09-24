@@ -7,8 +7,8 @@ on:
     branches: [ main ]
 
 jobs:
-  typecheck:
-    name: Typecheck & Build Sanity
+  validate:
+    name: Typecheck, Test & Lint
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -17,7 +17,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: 'npm'
 
       - name: Install dependencies
@@ -25,3 +25,9 @@ jobs:
 
       - name: Run TypeScript typecheck
         run: npm run typecheck
+
+      - name: Run Jest unit tests
+        run: npm test
+
+      - name: Run ESLint
+        run: npm run lint

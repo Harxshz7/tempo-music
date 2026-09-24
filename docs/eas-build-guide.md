@@ -4,7 +4,7 @@ This document details how to trigger and manage builds for Tempo Music using **E
 
 ---
 
-## 📋 Build Profiles Overview ([`eas.json`](file:///c:/Users/harxs/OneDrive/Desktop/tempo-music/eas.json))
+## 📋 Build Profiles Overview ([`eas.json`](../eas.json))
 
 | Profile | Target Audience | Distribution | Output Format | Use Case |
 | :--- | :--- | :--- | :--- | :--- |

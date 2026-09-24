@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.2.0] - 2026-09-23
 
 ### Added
-- Comprehensive developer architecture documentation ([`working.md`](file:///c:/Users/harxs/OneDrive/Desktop/tempo-music/working.md)), contribution guidelines ([`CONTRIBUTING.md`](file:///c:/Users/harxs/OneDrive/Desktop/tempo-music/CONTRIBUTING.md)), and EAS deployment guide ([`docs/eas-build-guide.md`](file:///c:/Users/harxs/OneDrive/Desktop/tempo-music/docs/eas-build-guide.md)).
+- Comprehensive developer architecture documentation ([`working.md`](./working.md)), contribution guidelines ([`CONTRIBUTING.md`](./CONTRIBUTING.md)), and EAS deployment guide ([`docs/eas-build-guide.md`](./docs/eas-build-guide.md)).
 - Jest unit testing framework setup with `ts-jest` and `AsyncStorage` mocks.
 - Subsonic API client unit test suite (`__tests__/subsonic.test.ts`) covering token hashing, server config persistence, query builders, and error handling.
 - `usePlayerStore` unit test suite (`__tests__/playerStore.test.ts`) covering queue navigation, shuffle/repeat modes, item removal, and reordering logic.

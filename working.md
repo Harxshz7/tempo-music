@@ -2,7 +2,7 @@
 
 Technical architecture documentation for developers working on the **Tempo Music** codebase.
 
-For end-user features and setup instructions, see [`README.md`](file:///c:/Users/harxs/OneDrive/Desktop/tempo-music/README.md).
+For end-user features and setup instructions, see [`README.md`](./README.md).
 
 ---
 
@@ -50,11 +50,11 @@ Tempo is a cross-platform mobile and web music streaming client built with React
 ## Core Systems
 
 ### 1. Subsonic API Client
-* **Key File**: [`src/api/subsonic.ts`](file:///c:/Users/harxs/OneDrive/Desktop/tempo-music/src/api/subsonic.ts)
+* **Key File**: [`src/api/subsonic.ts`](./src/api/subsonic.ts)
 * **Auth Protocol**: Implements Subsonic REST API token authentication using `u` (username), `t` (token), `s` (salt), `v` (`1.16.1`), and `c` (`TempoMusic`).
   * Token formula: `t = md5(password + salt)`.
   * `salt` is a randomly generated 6-character hex string generated per auth request.
-* **Credentials Storage**: Active credentials (`serverUrl`, `username`, `password`, `token`, `salt`) are managed by [`authStore.ts`](file:///c:/Users/harxs/OneDrive/Desktop/tempo-music/src/store/authStore.ts) and persisted to `AsyncStorage` (`tempo_auth_storage`).
+* **Credentials Storage**: Active credentials (`serverUrl`, `username`, `password`, `token`, `salt`) are managed by [`authStore.ts`](./src/store/authStore.ts) and persisted to `AsyncStorage` (`tempo_auth_storage`).
 * **Endpoints Implemented**:
   * `ping.view`: Server connectivity & auth validation.
   * `getIndexes.view` / `getArtists.view` / `getArtist.view` / `getAlbum.view`: Music library browsing.
@@ -67,31 +67,31 @@ Tempo is a cross-platform mobile and web music streaming client built with React
   * `getLyrics.view`: Plain-text lyrics retrieval.
 
 ### 2. Audio Service & Playback Engine
-* **Key File**: [`src/services/audioService.ts`](file:///c:/Users/harxs/OneDrive/Desktop/tempo-music/src/services/audioService.ts)
+* **Key File**: [`src/services/audioService.ts`](./src/services/audioService.ts)
 * **Engine**: Built on Expo SDK 57 `expo-audio` API (`AudioPlayer` / `createAudioPlayer`).
 * **Playback Lifecycle**:
-  * `play(track)`: Resolves local offline file URI via [`offlineService.ts`](file:///c:/Users/harxs/OneDrive/Desktop/tempo-music/src/services/offlineService.ts) if downloaded; otherwise builds remote `stream.view` URL via Subsonic API. Loads stream into `expo-audio` player, triggers `.play()`, and reports now-playing scrobble.
+  * `play(track)`: Resolves local offline file URI via [`offlineService.ts`](./src/services/offlineService.ts) if downloaded; otherwise builds remote `stream.view` URL via Subsonic API. Loads stream into `expo-audio` player, triggers `.play()`, and reports now-playing scrobble.
   * `pause()` / `resume()` / `seek(seconds)` / `stop()`: Directly controls the active player instance.
-  * Status updates (position, duration, buffering, playback status) are emitted to [`playerStore.ts`](file:///c:/Users/harxs/OneDrive/Desktop/tempo-music/src/store/playerStore.ts).
-* **Background Playback & Lock Screen Controls**: Handled via [`notificationPlayer.ts`](file:///c:/Users/harxs/OneDrive/Desktop/tempo-music/src/services/notificationPlayer.ts) using `expo-notifications` and background audio category configuration in `app.json`.
+  * Status updates (position, duration, buffering, playback status) are emitted to [`playerStore.ts`](./src/store/playerStore.ts).
+* **Background Playback & Lock Screen Controls**: Handled via [`notificationPlayer.ts`](./src/services/notificationPlayer.ts) using `expo-notifications` and background audio category configuration in `app.json`.
 
 ### 3. State Management & Persistence
-* **Library**: [Zustand](file:///c:/Users/harxs/OneDrive/Desktop/tempo-music/src/store) with `JSON.stringify` / `AsyncStorage` persistence adapters.
+* **Library**: [Zustand](./src/store) with `JSON.stringify` / `AsyncStorage` persistence adapters.
 * **Stores**:
-  * **[`authStore.ts`](file:///c:/Users/harxs/OneDrive/Desktop/tempo-music/src/store/authStore.ts)**: Server URL, credentials, token, authentication status (`tempo_auth_storage`).
-  * **[`playerStore.ts`](file:///c:/Users/harxs/OneDrive/Desktop/tempo-music/src/store/playerStore.ts)**: Current track, queue array, queue index, play state (`isPlaying`), position/duration, volume, repeat mode (`off` | `one` | `all`), and shuffle mode (`tempo_player_storage`).
-  * **[`starredStore.ts`](file:///c:/Users/harxs/OneDrive/Desktop/tempo-music/src/store/starredStore.ts)**: Starred tracks, albums, and artists synced with Subsonic server (`tempo_starred_storage`).
-  * **[`settingsStore.ts`](file:///c:/Users/harxs/OneDrive/Desktop/tempo-music/src/store/settingsStore.ts)**: Max bitrate quality, transcode format, theme mode, cache size limit, offline-only mode (`tempo_settings_storage`).
-  * **[`playCountStore.ts`](file:///c:/Users/harxs/OneDrive/Desktop/tempo-music/src/store/playCountStore.ts)**: Local play counters per track ID (`tempo_playcount_storage`).
+  * **[`authStore.ts`](./src/store/authStore.ts)**: Server URL, credentials, token, authentication status (`tempo_auth_storage`).
+  * **[`playerStore.ts`](./src/store/playerStore.ts)**: Current track, queue array, queue index, play state (`isPlaying`), position/duration, volume, repeat mode (`off` | `one` | `all`), and shuffle mode (`tempo_player_storage`).
+  * **[`starredStore.ts`](./src/store/starredStore.ts)**: Starred tracks, albums, and artists synced with Subsonic server (`tempo_starred_storage`).
+  * **[`settingsStore.ts`](./src/store/settingsStore.ts)**: Max bitrate quality, transcode format, theme mode, cache size limit, offline-only mode (`tempo_settings_storage`).
+  * **[`playCountStore.ts`](./src/store/playCountStore.ts)**: Local play counters per track ID (`tempo_playcount_storage`).
 
 ### 4. Navigation & Layout Structure
-* **Key File**: [`src/components/Navigation.tsx`](file:///c:/Users/harxs/OneDrive/Desktop/tempo-music/src/components/Navigation.tsx)
-* **Auth Guard**: Evaluates `isAuthenticated` from `authStore`. Unauthenticated users see [`LoginScreen.tsx`](file:///c:/Users/harxs/OneDrive/Desktop/tempo-music/src/screens/LoginScreen.tsx).
-* **Responsive Shell**: Uses [`useResponsive.ts`](file:///c:/Users/harxs/OneDrive/Desktop/tempo-music/src/hooks/useResponsive.ts) hook:
+* **Key File**: [`src/components/Navigation.tsx`](./src/components/Navigation.tsx)
+* **Auth Guard**: Evaluates `isAuthenticated` from `authStore`. Unauthenticated users see [`LoginScreen.tsx`](./src/screens/LoginScreen.tsx).
+* **Responsive Shell**: Uses [`useResponsive.ts`](./src/hooks/useResponsive.ts) hook:
   * **Mobile**: Bottom Tab Navigator (`Library`, `Search`, `Playlists`, `Settings`).
-  * **Desktop**: [`DesktopSidebar.tsx`](file:///c:/Users/harxs/OneDrive/Desktop/tempo-music/src/navigation/DesktopSidebar.tsx) sidebar shell.
-* **Stack Routes & Modals**: Detail screens (`AlbumDetailScreen`, `ArtistDetailScreen`, `PlaylistDetailScreen`) push onto `Stack.Navigator`. [`PlayerScreen.tsx`](file:///c:/Users/harxs/OneDrive/Desktop/tempo-music/src/screens/PlayerScreen.tsx) opens as a bottom-up modal presentation.
-* **Persistent Bar**: [`NeoPlayerBar.tsx`](file:///c:/Users/harxs/OneDrive/Desktop/tempo-music/src/components/NeoPlayerBar.tsx) renders as an overlay above the tab bar on mobile or at the bottom on desktop whenever a track is loaded.
+  * **Desktop**: [`DesktopSidebar.tsx`](./src/navigation/DesktopSidebar.tsx) sidebar shell.
+* **Stack Routes & Modals**: Detail screens (`AlbumDetailScreen`, `ArtistDetailScreen`, `PlaylistDetailScreen`) push onto `Stack.Navigator`. [`PlayerScreen.tsx`](./src/screens/PlayerScreen.tsx) opens as a bottom-up modal presentation.
+* **Persistent Bar**: [`NeoPlayerBar.tsx`](./src/components/NeoPlayerBar.tsx) renders as an overlay above the tab bar on mobile or at the bottom on desktop whenever a track is loaded.
 
 ---
 
@@ -140,15 +140,15 @@ Tempo is a cross-platform mobile and web music streaming client built with React
 
 ## Design System
 
-* **Location**: NativeWind / Tailwind config ([`global.css`](file:///c:/Users/harxs/OneDrive/Desktop/tempo-music/global.css), [`tailwind.config.js`](file:///c:/Users/harxs/OneDrive/Desktop/tempo-music/tailwind.config.js)) and UI primitives in [`src/components/ui/`](file:///c:/Users/harxs/OneDrive/Desktop/tempo-music/src/components/ui).
+* **Location**: NativeWind / Tailwind config ([`global.css`](./global.css), [`tailwind.config.js`](./tailwind.config.js)) and UI primitives in [`src/components/ui/`](./src/components/ui).
 * **Style Guidelines**: Neo-brutalist aesthetic using solid high-contrast borders (`border-2 border-black`), offset hard drop shadows (`shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]`), vibrant accent colors (`#FFE600` yellow, `#FF6B6B` coral, `#FFFDF5` cream background), and `SpaceGrotesk` typography.
 * **Core UI Primitives**:
-  * [`HardShadow.tsx`](file:///c:/Users/harxs/OneDrive/Desktop/tempo-music/src/components/ui/HardShadow.tsx): Container with solid offset shadow.
-  * [`NeoButton.tsx`](file:///c:/Users/harxs/OneDrive/Desktop/tempo-music/src/components/ui/NeoButton.tsx): Brutalist button with active press translation.
-  * [`NeoCard.tsx`](file:///c:/Users/harxs/OneDrive/Desktop/tempo-music/src/components/ui/NeoCard.tsx): Bordered card with hard shadow.
-  * [`NeoInput.tsx`](file:///c:/Users/harxs/OneDrive/Desktop/tempo-music/src/components/ui/NeoInput.tsx): Neo-brutalist text input field.
-  * [`NeoCoverArt.tsx`](file:///c:/Users/harxs/OneDrive/Desktop/tempo-music/src/components/ui/NeoCoverArt.tsx): Cover art display with fallback placeholders.
-  * [`NeoBadge.tsx`](file:///c:/Users/harxs/OneDrive/Desktop/tempo-music/src/components/ui/NeoBadge.tsx), [`NeoSwitch.tsx`](file:///c:/Users/harxs/OneDrive/Desktop/tempo-music/src/components/ui/NeoSwitch.tsx), [`NeoSkeleton.tsx`](file:///c:/Users/harxs/OneDrive/Desktop/tempo-music/src/components/ui/NeoSkeleton.tsx), [`NeoToast.tsx`](file:///c:/Users/harxs/OneDrive/Desktop/tempo-music/src/components/ui/NeoToast.tsx).
+  * [`HardShadow.tsx`](./src/components/ui/HardShadow.tsx): Container with solid offset shadow.
+  * [`NeoButton.tsx`](./src/components/ui/NeoButton.tsx): Brutalist button with active press translation.
+  * [`NeoCard.tsx`](./src/components/ui/NeoCard.tsx): Bordered card with hard shadow.
+  * [`NeoInput.tsx`](./src/components/ui/NeoInput.tsx): Neo-brutalist text input field.
+  * [`NeoCoverArt.tsx`](./src/components/ui/NeoCoverArt.tsx): Cover art display with fallback placeholders.
+  * [`NeoBadge.tsx`](./src/components/ui/NeoBadge.tsx), [`NeoSwitch.tsx`](./src/components/ui/NeoSwitch.tsx), [`NeoSkeleton.tsx`](./src/components/ui/NeoSkeleton.tsx), [`NeoToast.tsx`](./src/components/ui/NeoToast.tsx).
 * **Adding New Components**: Use existing `Neo*` primitives and `SpaceGrotesk` fonts. Avoid soft gradients or muted shadows; maintain solid 2px/3px black borders.
 
 ---
@@ -157,10 +157,10 @@ Tempo is a cross-platform mobile and web music streaming client built with React
 
 Based strictly on code inspection of current source files:
 
-1. **Queue Reordering UI**: [`playerStore.ts`](file:///c:/Users/harxs/OneDrive/Desktop/tempo-music/src/store/playerStore.ts) implements `reorderQueue(fromIndex, toIndex)`, but drag-and-drop reordering gesture UI in [`PlayerScreen.tsx`](file:///c:/Users/harxs/OneDrive/Desktop/tempo-music/src/screens/PlayerScreen.tsx) is not yet wired.
-2. **Equalizer & DSP**: [`settingsStore.ts`](file:///c:/Users/harxs/OneDrive/Desktop/tempo-music/src/store/settingsStore.ts) contains an `equalizerPreset` state setting, but custom audio DSP processing is not implemented in [`audioService.ts`](file:///c:/Users/harxs/OneDrive/Desktop/tempo-music/src/services/audioService.ts).
+1. **Queue Reordering UI**: [`playerStore.ts`](./src/store/playerStore.ts) implements `reorderQueue(fromIndex, toIndex)`, but drag-and-drop reordering gesture UI in [`PlayerScreen.tsx`](./src/screens/PlayerScreen.tsx) is not yet wired.
+2. **Equalizer & DSP**: [`settingsStore.ts`](./src/store/settingsStore.ts) contains an `equalizerPreset` state setting, but custom audio DSP processing is not implemented in [`audioService.ts`](./src/services/audioService.ts).
 3. **Synced Lyrics**: `subsonic.getLyrics()` fetches plain-text lyrics from Subsonic; time-synced LRCLIB lyric parsing is not yet implemented.
-4. **Debug Route**: [`src/screens/AudioSpikeScreen.tsx`](file:///c:/Users/harxs/OneDrive/Desktop/tempo-music/src/screens/AudioSpikeScreen.tsx) remains registered in [`Navigation.tsx`](file:///c:/Users/harxs/OneDrive/Desktop/tempo-music/src/components/Navigation.tsx#L18) (`// SPIKE-ONLY — remove before merge`).
+4. **Debug Route**: [`src/screens/AudioSpikeScreen.tsx`](./src/screens/AudioSpikeScreen.tsx) remains registered in [`Navigation.tsx`](./src/components/Navigation.tsx#L18) (`// SPIKE-ONLY — remove before merge`).
 
 ---
 
