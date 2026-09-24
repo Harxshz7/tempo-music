@@ -155,9 +155,10 @@ export default function SearchScreen() {
       id: song.id,
       title: song.title,
       artist: song.artist || 'Unknown',
-      coverArtUrl: song.coverArt ? subsonic.getCoverArtUrl(song.coverArt) : undefined,
-      streamUrl: subsonic.getStreamUrl(song.id),
+      coverArtId: song.coverArt,
       duration: song.duration || 0,
+      albumId: song.albumId,
+      artistId: song.artistId,
     }));
   };
 

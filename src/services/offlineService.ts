@@ -23,7 +23,8 @@ export interface DownloadItem {
   artist: string;
   album?: string;
   albumId?: string;
-  coverArtUrl?: string;
+  /** Cover art id only — the credential-bearing URL is derived on demand. */
+  coverArtId?: string;
   duration: number;
   localUri: string;
   status: DownloadStatus;
@@ -104,7 +105,7 @@ class OfflineService {
   /**
    * Download a single track
    */
-  async downloadTrack(song: Song, albumArtUrl?: string): Promise<boolean> {
+  async downloadTrack(song: Song, albumArtId?: string): Promise<boolean> {
     await this.ensureDir();
     const store = useOfflineStore.getState();
     const existing = store.downloads[song.id];
@@ -124,7 +125,7 @@ class OfflineService {
       artist: song.artist || 'Unknown',
       album: song.album,
       albumId: song.albumId,
-      coverArtUrl: song.coverArt ? subsonic.getCoverArtUrl(song.coverArt) : albumArtUrl,
+      coverArtId: song.coverArt || albumArtId,
       duration: song.duration || 0,
       localUri,
       status: 'downloading',
@@ -167,11 +168,11 @@ class OfflineService {
     try {
       const data = await subsonic.getAlbum(albumId);
       const songs = data.song || [];
-      const coverArtUrl = data.album.coverArt ? subsonic.getCoverArtUrl(data.album.coverArt) : undefined;
-      
+      const coverArtId = data.album.coverArt;
+
       let count = 0;
       for (const song of songs) {
-        const success = await this.downloadTrack(song, coverArtUrl);
+        const success = await this.downloadTrack(song, coverArtId);
         if (success) count++;
       }
       showToast(`Downloaded ${count}/${songs.length} album tracks`, 'success');

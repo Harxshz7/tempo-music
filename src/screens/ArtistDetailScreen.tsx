@@ -58,9 +58,10 @@ export default function ArtistDetailScreen() {
       id: song.id,
       title: song.title,
       artist: song.artist || artist?.name || 'Unknown',
-      coverArtUrl: song.coverArt ? subsonic.getCoverArtUrl(song.coverArt) : (album.coverArt ? subsonic.getCoverArtUrl(album.coverArt) : undefined),
-      streamUrl: subsonic.getStreamUrl(song.id),
+      coverArtId: song.coverArt || album.coverArt,
       duration: song.duration || 0,
+      albumId: song.albumId || album.id,
+      artistId: song.artistId || artist?.id,
     }));
   };
 
