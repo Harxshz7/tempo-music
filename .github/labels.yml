@@ -1,0 +1,42 @@
+# Label Taxonomy for Tempo Music
+# Can be synced via GitHub API or github-label-sync
+
+- name: "good-first-issue"
+  color: "7057ff"
+  description: "Good for newcomers; well-scoped and clear boundaries"
+
+- name: "help-wanted"
+  color: "008672"
+  description: "Extra attention or community contribution needed"
+
+- name: "bug"
+  color: "d73a4a"
+  description: "Something isn't working as expected"
+
+- name: "enhancement"
+  color: "a2eeef"
+  description: "New feature or request"
+
+- name: "needs-triage"
+  color: "fbca04"
+  description: "Needs maintainer reproduction, categorization, or feedback"
+
+- name: "audio"
+  color: "b60205"
+  description: "Related to audioService, expo-audio, background playback, or lock-screen controls"
+
+- name: "ui-ux"
+  color: "1d76db"
+  description: "Related to the Neo-Brutalist design system, layout, or screen presentation"
+
+- name: "subsonic-api"
+  color: "0052cc"
+  description: "Related to Subsonic/Navidrome REST client or protocol compliance"
+
+- name: "documentation"
+  color: "0075ca"
+  description: "Improvements or additions to documentation"
+
+- name: "question"
+  color: "d876e3"
+  description: "Further information or setup clarification requested"

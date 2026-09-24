@@ -1,0 +1,25 @@
+# CODEOWNERS for Tempo Music
+# These owners will be automatically requested for review when someone opens a pull request.
+
+# Default maintainer for the entire repository
+* @Harxshz7
+
+# Core Audio Playback Engine & Background Services
+/src/services/audioService.ts @Harxshz7
+/src/services/notificationPlayer.ts @Harxshz7
+/src/services/offlineService.ts @Harxshz7
+/src/hooks/useAudioPlayer.ts @Harxshz7
+
+# Subsonic REST API & Authentication Protocol
+/src/api/ @Harxshz7
+/src/store/authStore.ts @Harxshz7
+
+# Neo-Brutalist Design System Core & Theme Tokens
+/src/components/ui/ @Harxshz7
+/global.css @Harxshz7
+/tailwind.config.js @Harxshz7
+
+# CI & Release Configurations
+/.github/ @Harxshz7
+/eas.json @Harxshz7
+/app.json @Harxshz7

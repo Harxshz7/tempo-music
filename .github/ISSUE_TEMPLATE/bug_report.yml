@@ -1,0 +1,73 @@
+name: 🐛 Bug Report
+description: File a bug report to help us improve Tempo
+title: "[Bug]: "
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report an issue! Please provide as much detail as possible so we can reproduce and fix it.
+  - type: input
+    id: environment
+    attributes:
+      label: Tempo & Server Version
+      description: What version of Tempo and Subsonic server are you using?
+      placeholder: "Tempo: v0.2.0 | Server: Navidrome v0.54.5"
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Operating System / Platform
+      description: Which platform did you experience the bug on?
+      options:
+        - Android (Dev Client / APK)
+        - Android (Expo Go)
+        - iOS (Dev Client / TestFlight)
+        - iOS (Simulator / Expo Go)
+        - Web (Browser)
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: A clear and concise description of what the bug is.
+      placeholder: "When I tap a track in a playlist, playback fails with..."
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: Step-by-step instructions to reproduce the behavior.
+      placeholder: |
+        1. Go to 'Library'
+        2. Click on 'Playlists'
+        3. Select playlist 'Chill'
+        4. Tap 'Shuffle All'
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What should have happened instead?
+      placeholder: "The playlist should start playing in random order."
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Console Logs / Error Messages
+      description: Paste any terminal or DevTools console errors here.
+      render: shell
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: I have searched existing issues to ensure this is not a duplicate.
+          required: true
+        - label: I have tested against a Subsonic-compatible server (v1.16.1+).
+          required: false

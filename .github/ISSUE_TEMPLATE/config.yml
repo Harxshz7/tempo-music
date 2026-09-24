@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 📖 Architecture & Developer Documentation
+    url: https://github.com/Harxshz7/tempo-music/blob/main/working.md
+    about: Read the in-depth architectural guide for Tempo
+  - name: 🤝 Contributor Guide
+    url: https://github.com/Harxshz7/tempo-music/blob/main/CONTRIBUTING.md
+    about: Instructions for setting up the local environment and submitting PRs

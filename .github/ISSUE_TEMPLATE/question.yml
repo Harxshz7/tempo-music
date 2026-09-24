@@ -1,0 +1,22 @@
+name: ❓ Question / Support
+description: Ask a question about setting up, configuring, or using Tempo
+title: "[Question]: "
+labels: ["question", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Have a question about configuring Tempo with your Subsonic / Navidrome instance or developer environment?
+  - type: textarea
+    id: question
+    attributes:
+      label: Your Question
+      description: What would you like help with?
+      placeholder: "How do I configure CORS on Nginx for web playback?"
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Context / Environment
+      description: Please share your server setup, platform, and anything you have already tried.
