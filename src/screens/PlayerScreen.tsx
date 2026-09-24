@@ -5,7 +5,7 @@ import { ChevronDown, SkipBack, SkipForward, Play, Pause, Shuffle, Repeat, Trash
 import { useNavigation } from '@react-navigation/native';
 import Svg, { Defs, Pattern, Circle, Rect } from 'react-native-svg';
 
-import { usePlayerStore, Track } from '../store/playerStore';
+import { usePlayerStore } from '../store/playerStore';
 import { useAudioPlayer } from '../hooks/useAudioPlayer';
 import { useResponsive } from '../hooks/useResponsive';
 import { NeoText, NeoCard, NeoCoverArt } from '../components/ui';

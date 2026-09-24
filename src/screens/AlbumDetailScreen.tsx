@@ -281,7 +281,6 @@ export default function AlbumDetailScreen() {
         isPlaying={isPlaying} 
         onPress={() => handleTrackPress(index)}
         onMenuPress={handleTrackMenu}
-        albumArtUrl={album?.coverArt ? subsonic.getCoverArtUrl(album.coverArt) : undefined}
         fallbackArtist={album?.artist}
       />
     );

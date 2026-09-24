@@ -4,7 +4,6 @@ import { MoreHorizontal, Star, HardDriveDownload } from 'lucide-react-native';
 import { NeoText } from './ui';
 import { Track } from '../store/playerStore';
 import type { Song } from '../types';
-import subsonic from '../api/subsonic';
 import { triggerHaptic } from '../utils/haptics';
 import { useStarredStore } from '../store/starredStore';
 import { useOfflineStore } from '../services/offlineService';
@@ -15,7 +14,6 @@ interface TrackRowProps {
   isPlaying: boolean;
   onPress: () => void;
   onMenuPress: (track: Track) => void;
-  albumArtUrl?: string; // used for mapping if coverArt isn't on song
   fallbackArtist?: string; // used if song doesn't have artist
   showStarToggle?: boolean;
 }
@@ -28,7 +26,6 @@ export default function TrackRow({
   isPlaying,
   onPress,
   onMenuPress,
-  albumArtUrl,
   fallbackArtist,
   showStarToggle = true,
 }: TrackRowProps) {
